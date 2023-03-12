@@ -17,7 +17,7 @@ void statusDisplay::setup (void)
     setTextWrap(false);
     showStartupScreen();
     dim(true);
-    _statusBar.setup(STATUS_SYM_BAT_ICON | STATUS_SYM_KEEP_AWAKE | STATUS_SYM_WIFI_VALUE | STATUS_SYM_WIFI_ICON);
+    _statusBar.setup(STATUS_SYM_WIFI_ICON);
 }
 
 void statusDisplay::loop(void)

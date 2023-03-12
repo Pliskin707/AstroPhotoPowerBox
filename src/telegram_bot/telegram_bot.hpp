@@ -6,23 +6,29 @@
 #include <ESP8266WiFi.h>
 #include <ESP8266mDNS.h>
 #include <WiFiClientSecure.h>
-#include "UniversalTelegramBot.h"
+#include "AsyncTelegram2.h"
 
 #include "config.h"
 #include "wifiauth2.h"
 #include "oled/oled.hpp"
 
-class AstroTelegramBot : public UniversalTelegramBot
+class AstroTelegramBot : public AsyncTelegram2
 {
-    using UniversalTelegramBot::UniversalTelegramBot;
+    using AsyncTelegram2::AsyncTelegram2;
 
     private:
-    bool _init_ok = false;
-    uint32_t _nextCheck = 0;
+        bool _init_ok = false;
+        bool _echo = false;
+        uint32_t _nextCheck = 0;
+        TBMessage _msg;
+        InlineKeyboard _keyboard;
+
+        void _handleQuery (const TBMessage &msg);
+        void _handleText (const TBMessage &msg);
 
     public:
-    bool begin ();
-    void loop ();
+        bool begin ();
+        void loop ();
 };
 
 extern AstroTelegramBot telegramBot;

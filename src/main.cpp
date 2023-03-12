@@ -3,7 +3,6 @@
 #include <ESP8266WiFi.h>
 #include <ESP8266mDNS.h>
 #include <WiFiClientSecure.h>
-#include "UniversalTelegramBot.h"
 
 #include "ota/ota.hpp"
 #include "projutils/projutils.hpp"
@@ -74,6 +73,8 @@ void setup() {
 
   energy.setup();
   energy.setSleepLimit(MAX_SLEEP_DURATION_MS);
+
+  display.clearDisplay();
 }
 
 void loop() {
