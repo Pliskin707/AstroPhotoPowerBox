@@ -19,12 +19,16 @@ class AstroTelegramBot : public AsyncTelegram2
     private:
         bool _init_ok = false;
         bool _echo = false;
+        bool _heaterKeyboardVisible = false;
         uint32_t _nextCheck = 0;
         TBMessage _msg;
         InlineKeyboard _keyboard;
+        InlineKeyboard _relayKeyboard;
+        ReplyKeyboard _heaterReplyKeyboard;
 
         void _handleQuery (const TBMessage &msg);
         void _handleText (const TBMessage &msg);
+        void _handleReplies (const TBMessage &msg);
 
     public:
         bool begin ();
