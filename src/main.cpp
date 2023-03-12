@@ -2,9 +2,18 @@
 
 #include <ESP8266WiFi.h>
 #include <ESP8266mDNS.h>
+#include <WiFiClientSecure.h>
+#include "UniversalTelegramBot.h"
+
 #include "ota/ota.hpp"
 #include "projutils/projutils.hpp"
 #include "config.hpp"
+#include "oled/oled.hpp"
+#include "mavg.hpp"
+#include "communication/communication.hpp"
+#include "energy saver/energy_saver.hpp"
+#include "non volatile/non_volatile.hpp"
+#include "telegram_bot/telegram_bot.hpp"
 
 using namespace pliskin;
 
@@ -14,13 +23,15 @@ using namespace pliskin;
  * 
  * #pragma once
  * 
- * const char* ssid = "<YourSSIDhere>";
- * const char* password = "<YourPasswordHere>";
+ * #define SSID "<YourSSIDhere>"
+ * #define PASSWORD "<YourPasswordHere>"
+ * #define TELEGRAM_TOKEN "<BotTokenHere>"  // optional
+ * #define TELEGRAM_CHAT "<ChatIDHere>"     // optional
  */
-#include "../../../../../../wifiauth2.h"
+#include "wifiauth2.h"
 
 static bool mDNS_init_ok = false;
-WiFiClient client;
+
 
 void setup() {
   #ifndef DEBUG_PRINT
@@ -29,15 +40,13 @@ void setup() {
   Serial.begin(115200);
   #endif
 
+  display.setup();
+  configTime(TIMEZONESTR, NTPSERVERSTR);
+
   // Wifi
-  IPAddress local_IP(192, 168, 0, 50);
-  IPAddress gateway(192, 168, 0, 1);
-  IPAddress subnet(255, 255, 255, 0);
-  IPAddress dns(1, 1, 1, 1);
-  WiFi.hostname(DEVICENAME);
+  WiFi.hostname(DeviceName);
   WiFi.mode(WIFI_STA);
-  WiFi.begin(ssid, password);
-  wifi_set_sleep_type(NONE_SLEEP_T);
+  WiFi.begin(SSID, PASSWORD);
 
   wl_status_t wstat;
   while (true)
@@ -53,43 +62,58 @@ void setup() {
     dprintf("Connecting (%d) ...\n", wstat);
   };
 
+  telegramBot.begin();
+
   // mDNS
-  mDNS_init_ok = MDNS.begin(DEVICENAME);
+  mDNS_init_ok = MDNS.begin(DeviceName);
+  if (mDNS_init_ok)
+    comm.setup();
 
   // OTA
-  ota::begin(DEVICENAME);
+  ota::begin(DeviceName.c_str(), &display);
+
+  energy.setup();
+  energy.setSleepLimit(MAX_SLEEP_DURATION_MS);
 }
 
 void loop() {
-  const uint32_t time = millis();
-  static uint32_t next = 0;
-
-  // Wifi status
-  const bool connected = WiFi.isConnected();
-  #ifndef DEBUG_PRINT
-  digitalWrite(LEDPIN, !connected);
-  #endif
-
-  // mDNS
-  if (mDNS_init_ok)
-    MDNS.update();
-
-  // OTA
-  ota::handle();
-
-  // program logic
-  if (time >= next)
+  if (WiFi.isConnected())
   {
-    next = time + 10000;
-    dprintf("Systime: %lu ms; WLAN: %sconnected (as %s)\n", time, (connected ? "":"dis"), WiFi.localIP().toString().c_str());
+    if (mDNS_init_ok)
+      MDNS.update();
 
-    if (connected)
+    ota::handle();
+
+    if (ota::isUpdating())
     {
-        // TODO
+      // don't do anything else (ota handles the oled display)
+      yield();
     }
     else
-      WiFi.reconnect();
-  }
+    {
+      comm.loop();
+      telegramBot.loop();
+      if (comm.hasNewData())
+      {       
+        // TODO
+      }
 
-  yield();
+      display.loop();
+      comm.transmit();  // call this last so the status is as up-to-date as possible
+      nvmem.loop();
+      energy.loop();
+    }
+  }
+  else
+  {
+    digitalWrite(LEDPIN, !digitalRead(LEDPIN));
+
+    display.clearDisplay();
+    display.setCursor(0, 0);
+    display.showWarning("WiFi Lost");
+    display.display();
+
+    WiFi.begin();
+    delay(1000);
+  }
 }

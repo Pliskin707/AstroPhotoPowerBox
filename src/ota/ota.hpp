@@ -2,6 +2,8 @@
 #define __OTA_HPP__
 
 #include <ArduinoOTA.h>
+#include <LittleFS.h>
+#include "oled/oled.hpp"
 
 namespace pliskin
 {
@@ -18,8 +20,9 @@ class ota
         ~ota();
 
     public:
-        static void begin (const char * const deviceName);
+        static void begin (const char * const deviceName, statusDisplay * const pDisplay = nullptr);
         static void handle (void) {ArduinoOTA.handle();};
+        static bool isUpdating (void);
 };
 
 };
