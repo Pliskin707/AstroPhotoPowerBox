@@ -61,6 +61,9 @@ void setup() {
     dprintf("Connecting (%d) ...\n", wstat);
   };
 
+  WiFi.setAutoReconnect(true);
+  WiFi.persistent(true);
+
   telegramBot.begin();
 
   // mDNS
@@ -114,7 +117,7 @@ void loop() {
     display.showWarning("WiFi Lost");
     display.display();
 
-    WiFi.begin();
+    // WiFi.begin();
     delay(1000);
   }
 }
