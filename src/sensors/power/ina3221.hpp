@@ -33,13 +33,18 @@ class sensor : private nonCopyable
         void _readValue (value &dest, const uint8_t addr, const adcCorrection &correction);
 
     public:
-        explicit sensor (TwoWire * const wire = &Wire) : _wire(wire) {};
+        explicit sensor (TwoWire * const wire = &Wire);
 
         bool setup (const uint8_t addr);
 
         void setReadDelay (const uint32_t readDelay) {_minReadDelay = readDelay;};   // no attempt to read new values from the sensor if this duration did not yet elapse since the last read
         const value& getVoltage (const uint_fast8_t channelIndex);
         const value& getCurrent (const uint_fast8_t channelIndex);
+        void setVoltageCorrection (const uint_fast8_t channelIndex, const float factor, const float offset);
+        void setCurrentCorrection (const uint_fast8_t channelIndex, const float factor, const float offset);
+        void powerDown (void);  // disables measurement. The device will automatically be woken when new values are requested
+
+        static float calcCurrentFactorFromShunt (const float shuntOhm);
 };
 
 }

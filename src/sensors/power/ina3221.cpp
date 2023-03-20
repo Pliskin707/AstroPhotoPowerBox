@@ -24,6 +24,18 @@ namespace ina3221
 
 static const value dummy = {0.0f, 0, false};
 
+sensor::sensor (TwoWire * const wire) : _wire(wire) 
+{
+    const float defaultShunt = calcCurrentFactorFromShunt(0.1f);    // 100 mOhm
+    const float defaultVolt  = 0.008f;                              // 80 mV / step
+
+    for (uint_fast8_t ii = 0; ii < INA3221_NUM_CH; ii++)
+    {
+        setVoltageCorrection(ii, defaultVolt, 0.0f);
+        setCurrentCorrection(ii, defaultShunt, 0.0f);
+    }
+}
+
 void sensor::_prepareWire (void)
 {
     _wire->begin();                 // set this device = master
@@ -141,7 +153,6 @@ void sensor::_readValue (value &dest, const uint8_t addr, const adcCorrection &c
 {
     const uint32_t sysTime = millis();
     uint16_t rawData = 0;
-    int16_t valBits = 0;
     bool valid = false;
 
     do
@@ -158,17 +169,58 @@ void sensor::_readValue (value &dest, const uint8_t addr, const adcCorrection &c
 
         // parse data
         dest.time = sysTime;
-        valBits = (rawData >> 3);
+        dest.adc = (rawData >> 3);
 
         // negative?
         if (rawData & (1 << 15))
-            valBits |= 0xF000;  // two's complement
+            dest.adc |= 0xF000;  // two's complement
 
-        dest.value = fmaf(valBits, correction.factor, correction.offset);
+        dest.value = fmaf(dest.adc, correction.factor, correction.offset);
         valid = true;
     } while (false);
 
     dest.valid = valid;
+}
+
+void sensor::setVoltageCorrection (const uint_fast8_t channelIndex, const float factor, const float offset)
+{
+    if (channelIndex >= INA3221_NUM_CH)
+        return;
+
+    auto &correction  = _vAdcCorrection[channelIndex];
+    correction.factor = factor;
+    correction.offset = offset;
+}
+
+void sensor::setCurrentCorrection (const uint_fast8_t channelIndex, const float factor, const float offset)
+{
+    if (channelIndex >= INA3221_NUM_CH)
+        return;
+
+    auto &correction  = _iAdcCorrection[channelIndex];
+    correction.factor = factor;
+    correction.offset = offset;
+}
+
+void sensor::powerDown (void)
+{
+    const uint16_t prevConfigReg = _configRegister;
+    _configRegister &= ~0x0007; // power down mode
+    _reset();
+    _configRegister = prevConfigReg;
+}
+
+float sensor::calcCurrentFactorFromShunt (const float shuntOhm)
+{
+    float val = 0.0f;
+    const float shuntVoltagePerAdcStep = 0.00004f;  // 40 µV / step
+    if (!std::isnan(shuntOhm))
+    {
+        // I = U/R
+        val = shuntVoltagePerAdcStep / shuntOhm;
+    }
+
+    return val;
 }
 
 }

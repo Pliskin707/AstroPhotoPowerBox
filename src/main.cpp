@@ -13,6 +13,8 @@
 #include "energy saver/energy_saver.hpp"
 #include "non volatile/non_volatile.hpp"
 #include "telegram_bot/telegram_bot.hpp"
+#include "sensors/power/psens.hpp"
+#include "battery/battery.hpp"
 
 using namespace pliskin;
 
@@ -77,6 +79,9 @@ void setup() {
   energy.setup();
   energy.setSleepLimit(MAX_SLEEP_DURATION_MS);
 
+  // TODO read last known values from eeprom/file system
+  // TODO sensor calibration
+
   display.clearDisplay();
 }
 
@@ -102,10 +107,7 @@ void loop() {
         // TODO
       }
 
-      display.loop();
       comm.transmit();  // call this last so the status is as up-to-date as possible
-      nvmem.loop();
-      energy.loop();
     }
   }
   else
@@ -116,8 +118,11 @@ void loop() {
     display.setCursor(0, 0);
     display.showWarning("WiFi Lost");
     display.display();
-
-    // WiFi.begin();
-    delay(1000);
   }
+
+  display.loop();
+  nvmem.loop();
+  energy.loop();
+  powersensors.loop();
+  battery.loop();
 }

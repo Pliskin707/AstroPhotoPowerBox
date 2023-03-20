@@ -17,6 +17,7 @@ typedef struct value
 {
     float value;
     uint32_t time;
+    int16_t adc;
     bool valid;
 } value;
 
