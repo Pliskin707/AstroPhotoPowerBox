@@ -30,6 +30,10 @@ void statusDisplay::loop(void)
         _nextBarUpdate = sysTime + _barUpdateDelay;
 
         _statusBar.printStatus(this);
+        static float testSoC = 0;   // TODO replace with real SoC
+        showFullScreenSoC(testSoC);
+        testSoC++;
+        if (testSoC > 110.0f) testSoC = 0;
         show = true;
     }
 
@@ -150,6 +154,50 @@ void statusDisplay::showWarning (const char * const text)
         for (uint16_t ii = 0, xpos = 1; ii < 6; ii++, xpos += (16 + 6))
             drawBitmap(xpos, 0, WarningSymbol, 16, 16, SSD1306_WHITE);
     }
+}
+
+void statusDisplay::showFullScreenSoC (const float SoC)
+{
+    const int16_t fillHeight = height() - 2 * 2;
+    const int16_t fillWidth = fillHeight * 2;
+    const int16_t rectWidth = fillWidth + 2 * 2;
+    int16_t iSoC = (int16_t) ((fmaxf(0.0f, fminf(100.0f, SoC)) / 100.0f) * fillWidth);
+
+    // carving method
+    fillRect(0, 0, rectWidth, height(), SSD1306_WHITE);
+    fillRect(rectWidth, 8, 3, (height() - 2 * 8), SSD1306_WHITE);
+    drawRect(1, 1, rectWidth - 2, height() - 2, SSD1306_BLACK);
+
+    // invert the content of the empty part
+    for (int fillLine = 0; fillLine < fillHeight; fillLine++)
+    {
+        for (int vPos = iSoC + (fillLine / 3); vPos < fillWidth; vPos++)  // slightly angeled
+        {
+            const int16_t x = vPos + 2, y = fillLine + 2;
+            drawPixel(x, y, !getPixel(x, y));
+        }
+    }
+
+    // print text info
+    setTextSize(2);
+    setTextColor(SSD1306_WHITE, SSD1306_BLACK);
+    setCursor(rectWidth + 8, 0);
+    printf_P(PSTR("%3d"), (int) SoC);
+    setTextSize(1);
+    setCursor(getCursorX(), 8);
+    print('%');
+    // printf_P(PSTR("%03.0f%%"), SoC);
+    setTextSize(2);
+    setCursor(rectWidth + 8, 16);
+    printf_P(PSTR("%3d"), (int) battery.getCapacityRemaining());
+    setTextSize(1);
+    setCursor(getCursorX(), 24);
+    print("Wh");
+    // printf_P(PSTR("%3d Wh"), battery.getCapacityRemaining());
+
+    // restore default values
+    setTextSize(1);
+    setTextColor(SSD1306_WHITE, SSD1306_BLACK);
 }
 
 };

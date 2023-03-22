@@ -2,6 +2,7 @@
 #define __OLED_HPP__
 
 #include <Adafruit_SSD1306.h>
+// #include <Fonts/FreeMonoBold18pt7b.h>
 #include <Wire.h>
 #include "projutils/projutils.hpp"
 #include "config.hpp"
@@ -9,6 +10,7 @@
 #include "status_bar.hpp"
 #include "energy saver/energy_saver.hpp"
 #include "non volatile/non_volatile.hpp"
+#include "battery/battery.hpp"
 
 namespace pliskin
 {
@@ -30,6 +32,7 @@ class statusDisplay: public Adafruit_SSD1306
         void showWarning (const char * const text = nullptr);
         void printBarAt (const int y, const float percent, const char * const text = nullptr, const int height = 16);
         void setStatusBarVisible (const bool visible) {_nextBarUpdate = (visible ? 0 : UINT32_MAX);};
+        void showFullScreenSoC (const float SoC);
 };
 
 };

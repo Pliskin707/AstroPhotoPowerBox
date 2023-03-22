@@ -18,6 +18,7 @@
 #define SERVICE_NAME            "AstroPowerBox"
 
 #define MAX_SLEEP_DURATION_MS   (1000uL)
+#define BAT_MIN_TURN_ON_VOLTAGE  (11.0f)    // do not turn off if the voltage is lower than this value
 #define SOC_CRITICAL             (20.0f)    // battery icons start blinking if the state of charge drops below this value
 #define SOC_FULL_USER            (95.0f)    // battery is displayed as "full" if this value is reached (charging animation stops)
 

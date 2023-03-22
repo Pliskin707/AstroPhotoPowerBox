@@ -15,6 +15,7 @@
 #include "telegram_bot/telegram_bot.hpp"
 #include "sensors/power/psens.hpp"
 #include "battery/battery.hpp"
+#include "switcher/switcher.hpp"
 
 using namespace pliskin;
 
@@ -82,6 +83,8 @@ void setup() {
   // TODO read last known values from eeprom/file system
   // TODO sensor calibration
 
+  //switcher::setup();
+
   display.clearDisplay();
 }
 
@@ -120,9 +123,10 @@ void loop() {
     display.display();
   }
 
-  display.loop();
+  //switcher::loop();
   nvmem.loop();
   energy.loop();
-  powersensors.loop();
-  battery.loop();
+  //powersensors.loop();
+  //battery.loop();
+  display.loop();
 }
