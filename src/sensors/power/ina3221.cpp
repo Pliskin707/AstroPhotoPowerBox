@@ -51,7 +51,18 @@ bool sensor::_setRegisterPointer (const uint8_t regAddr)
     const bool success = (_wire->write(regAddr) == 1);
 
     if (!success)
+    {
+        #ifdef INA3221_DEBUG
+        dprintf("INA3221:%u| set reg ptr to 0x%02X failed\n", __LINE__, regAddr);
+        #endif
         _wire->endTransmission();
+    }
+    else
+    {
+        #ifdef INA3221_DEBUG
+        dprintf("INA3221:%u| reg ptr changed to 0x%02X\n", __LINE__, regAddr);
+        #endif
+    }
 
     return success;
 }
@@ -65,7 +76,13 @@ bool sensor::_read16 (uint16_t &data, const uint8_t addr)
     {
         _wire->endTransmission(false);
         _wire->requestFrom(_addr, static_cast<size_t>(2), true);
-        if (_wire->available() == 2)
+        const auto bytesAvailable = _wire->available();
+
+        #ifdef INA3221_DEBUG
+        dprintf("INA3221:%u| %d bytes available\n", __LINE__, bytesAvailable)
+        #endif
+
+        if (bytesAvailable == 2)
         {
             rx = _wire->read();
             rx <<= 8;
@@ -73,7 +90,7 @@ bool sensor::_read16 (uint16_t &data, const uint8_t addr)
 
             success = true;
         }
-        _wire->endTransmission();
+        // _wire->endTransmission();
     }
 
     data = rx;
@@ -87,11 +104,16 @@ bool sensor::_write16 (const uint16_t data, const uint8_t addr)
 
     if (success)
     {
-        _wire->endTransmission(false);
+        // _wire->endTransmission(false);
         bytesTransmitted += _wire->write(static_cast<uint8_t>((data >> 8) & 0xFF));
         bytesTransmitted += _wire->write(static_cast<uint8_t>(data & 0xFF));
+        const auto &result = _wire->endTransmission();
 
-        success = (bytesTransmitted == 2);
+        #ifdef INA3221_DEBUG
+        dprintf("INA3221:%u| Write16 result to 0x%02X: %d\n", __LINE__, addr, result);
+        #endif
+
+        success = (result == 0);
     }
 
     return success;
@@ -106,7 +128,16 @@ bool sensor::_reset (void)
         _prepareWire();
 
         if (!_write16(_configRegister, 0x00))
+        {
+            #ifdef INA3221_DEBUG
+            dprintf("INA3221:%u| Sensor 0x%02X reset failed\n", __LINE__, _addr);
+            #endif
             break;
+        }
+
+        #ifdef INA3221_DEBUG
+        dprintf("INA3221:%u| Sensor 0x%02X reset\n", __LINE__, _addr);
+        #endif
 
         success = true;
     } while (false);
@@ -117,10 +148,15 @@ bool sensor::_reset (void)
 bool sensor::setup (const uint8_t addr)
 {
     bool success = false;
+    _addr = addr;
 
     _wire->begin();
     _wire->setTimeout(1000 * 500);  // timeout in microseconds
     success = _reset();
+
+    #ifdef INA3221_DEBUG
+    dprintf("INA3221:%u| Sensor 0x%02X setup %s\n", __LINE__, addr, (success ? "success":"failed"));
+    #endif
 
     return success;
 }

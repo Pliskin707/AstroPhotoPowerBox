@@ -6,7 +6,7 @@ namespace switcher
 static volatile buttonInfo _btnInfo = {{0}};
 static float _chargeLimitSoC[2] = {100.0f, 95.0f};  // stop and restart SoC
 
-static void _buttonISR (void)
+static void IRAM_ATTR _buttonISR (void)
 {
     const bool state        = digitalRead(SWITCHER_PIN_BUTTON);
     const uint32_t sysTime  = millis();
@@ -20,6 +20,15 @@ static void _buttonISR (void)
         _btnInfo.lastButtonReleaseTime = sysTime;
 
     _btnInfo.pressed = state;
+}
+
+static void _setLedPwm (const uint16_t pwmVal)
+{
+    #ifdef DEBUG_PRINT
+    (void) pwmVal;  // don't do anything since this is the Serial Tx pin
+    #else
+    analogWrite(SWITCHER_PIN_BTNLED, pwmVal);
+    #endif
 }
 
 static bool _buttonLoop (void)
@@ -48,36 +57,51 @@ static bool _buttonLoop (void)
 
         case e_locked_idle:
         {
-            analogWrite(SWITCHER_PIN_BTNLED, 5);
+            _setLedPwm(5);
 
             // wait for a button press
             if (btnInfo.pressed)
+            {
                 keyLockState = e_unlocking_hold;
+                dprintf("Button pressed. Starting unlock sequence...\n")
+            }
         }
         break;
 
         case e_unlocking_hold:
         {
-            analogWrite(SWITCHER_PIN_BTNLED, 0x8000);
+            _setLedPwm(0x8000);
 
             // keep the button presse for about one second
             if (!btnInfo.pressed)
+            {
                 keyLockState = e_locked_idle;
+                dprintf("Button released too early. Returning to idle state.\n")
+            }
             else if ((sysTime - btnInfo.lastButtonPressTime) >= 1000)
+            {
                 keyLockState = e_unlocking_wait4release;
+                dprintf("Button hold complete. Waiting for release...\n")
+            }
         }
         break;
 
         case e_unlocking_wait4release:
         {
-            analogWrite(SWITCHER_PIN_BTNLED, 5);
+            _setLedPwm(5);
 
             // wait for release. 
             // if this does not happen within one second the button might be pressed unintentionally (i.e. by some object falling or pressing against the button)
             if (!btnInfo.pressed)
+            {
                 keyLockState = e_unlocking_release_delay;
+                dprintf("Button released. Waiting for completion delay...\n")
+            }
             else if ((sysTime - btnInfo.lastButtonPressTime) >= 2000)
+            {
                 keyLockState = e_locked_wait4release;
+                dprintf("Button was not released. Returning to initialization.\n")
+            }
         }
         break;
 
@@ -85,28 +109,40 @@ static bool _buttonLoop (void)
         {
             // button must not be pressed during this time
             if (btnInfo.pressed)
+            {
                 keyLockState = e_locked_wait4release;
+                dprintf("Button pressed too early. Returning to initialization.\n")
+            }
             else if ((sysTime - btnInfo.lastButtonReleaseTime) >= 1000)
+            {
                 keyLockState = e_unlocking_wait4ack;
+                dprintf("Completion delay completed. Waiting for activation...\n")
+            }
         }
         break;
 
         case e_unlocking_wait4ack:
         {
-            analogWrite(SWITCHER_PIN_BTNLED,0xffff);
+            _setLedPwm(0xffff);
 
             // wait for a final button press to acknowledge the unlock procedure
             if (btnInfo.pressed)
+            {
                 keyLockState = e_unlocked_idle;
+                dprintf("Activation complete. Button will remain unlocked for some time.\n")
+            }
             else if ((sysTime - btnInfo.lastButtonReleaseTime) >= 1000)
+            {
                 keyLockState = e_locked_idle;
+                dprintf("Activation window expired. Returning to idle state.\n")
+            }
         }
         break;
 
         case e_unlocked_idle:
         {
             const int ledPwmVal = (millis() & (1 << 10)) ? 0 : 0x1000; // toggle about every second
-            analogWrite(SWITCHER_PIN_BTNLED, ledPwmVal);
+            _setLedPwm(ledPwmVal);
 
             // auto-lock after a minute
             if (((sysTime - btnInfo.lastButtonReleaseTime) >= 60000) && 
@@ -114,6 +150,7 @@ static bool _buttonLoop (void)
             {
                 // no activity within the last minute
                 keyLockState = e_locked_wait4release;
+                dprintf("Button locked due to inactivity.\n")
             }
         }
         break;
@@ -124,6 +161,7 @@ static bool _buttonLoop (void)
     {
         // toggle the consumers power request
         consumerPowerRequest ^= true;
+        dprintf("User power request is now %s\n", (consumerPowerRequest ? "ON":"OFF"))
     }
 
     prevBtnPressCount = btnInfo.numPressesSinceStart;
@@ -259,7 +297,11 @@ void setup (void)
     analogWriteResolution(16);
     pinMode(SWITCHER_PIN_HEATER1, OUTPUT);
     pinMode(SWITCHER_PIN_HEATER2, OUTPUT);
+    #ifdef DEBUG_PRINT
+    #warning Button LED output will not be used since this is the Serial Tx pin
+    #else
     pinMode(SWITCHER_PIN_BTNLED, OUTPUT);
+    #endif
 
     pinMode(SWITCHER_PIN_BUTTON, INPUT);
     attachInterrupt(digitalPinToInterrupt(SWITCHER_PIN_BUTTON), &_buttonISR, FALLING);

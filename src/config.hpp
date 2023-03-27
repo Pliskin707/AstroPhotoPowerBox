@@ -11,7 +11,6 @@
 #define VERSION_PATCH   1
 #define VERSION_STRING  STR(VERSION_MAJOR) "." STR(VERSION_MINOR) "." STR(VERSION_PATCH)
 
-#define LEDPIN                  LED_BUILTIN
 #define DEVICE_PREFIX           "AstroNode"
 
 #define UDP_PORT                (5051)

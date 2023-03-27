@@ -2,7 +2,7 @@
 
 psens powersensors;
 
-psens::psens (TwoWire * wire, const uint8_t addr1, const uint8_t addr2)
+void psens::setup (TwoWire * wire, const uint8_t addr1, const uint8_t addr2)
 {
     const uint8_t addresses[] = {addr1, addr2};
     const float correctionFactor12mOhm = ina3221::sensor::calcCurrentFactorFromShunt(0.012f);

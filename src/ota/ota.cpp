@@ -30,10 +30,6 @@ void ota::begin (const char * const deviceName, statusDisplay * const pDisplay)
 
     ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) 
     {
-        #ifndef DEBUG_PRINT
-        digitalWrite(LEDPIN, !digitalRead(LEDPIN));
-        #endif
-
         static unsigned int callCount = 0;
 
         if (_pDisplay != nullptr)

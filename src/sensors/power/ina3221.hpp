@@ -5,6 +5,10 @@
 #include "non_copy_class.hpp"
 #include "ina3221_types.hpp"
 
+#include "projutils/projutils.hpp"
+
+// #define INA3221_DEBUG
+
 namespace ina3221
 {
 
@@ -20,7 +24,7 @@ class sensor : private nonCopyable
 
 
         uint32_t _minReadDelay      = 10;
-        uint16_t _configRegister    = 0x7027 | 
+        uint16_t _configRegister    = 0x7007 | 
                                         (e_ina3221_avg_4 << 9)       |  // average 4 samples
                                         (e_ina3221_conv_1100us << 6) |  // bus voltage conversion time
                                         (e_ina3221_conv_1100us << 3);   // shunt voltage conversion time

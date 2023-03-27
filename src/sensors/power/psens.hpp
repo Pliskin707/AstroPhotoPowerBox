@@ -31,7 +31,7 @@ class psens : private nonCopyable
         std::shared_ptr<ina3221::sensor> _getSensorAndChannel (const e_psens_channel channel, uint_fast8_t * sensChannel = nullptr);
 
     public:
-        explicit psens (TwoWire * wire = &Wire, const uint8_t addr1 = INA3221_ADDR_GND, const uint8_t addr2 = INA3221_ADDR_VS);
+        void setup (TwoWire * wire = &Wire, const uint8_t addr1 = INA3221_ADDR_GND, const uint8_t addr2 = INA3221_ADDR_VS);
         void loop (void);
         std::shared_ptr<ina3221::sensor> getSensor (uint_fast8_t sensorIndex);
         float getVoltage (const e_psens_channel channel);

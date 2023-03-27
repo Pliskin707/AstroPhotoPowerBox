@@ -36,9 +36,7 @@ static bool mDNS_init_ok = false;
 
 
 void setup() {
-  #ifndef DEBUG_PRINT
-  pinMode(LEDPIN, OUTPUT);
-  #else
+  #ifdef DEBUG_PRINT
   Serial.begin(115200);
   #endif
 
@@ -58,9 +56,6 @@ void setup() {
     if (wstat == WL_CONNECTED)
       break;
 
-    #ifndef DEBUG_PRINT
-    digitalWrite(LEDPIN, !digitalRead(LEDPIN));
-    #endif
     dprintf("Connecting (%d) ...\n", wstat);
   };
 
@@ -83,7 +78,8 @@ void setup() {
   // TODO read last known values from eeprom/file system
   // TODO sensor calibration
 
-  //switcher::setup();
+  powersensors.setup();
+  switcher::setup();
 
   display.clearDisplay();
 }
@@ -115,18 +111,42 @@ void loop() {
   }
   else
   {
-    digitalWrite(LEDPIN, !digitalRead(LEDPIN));
-
     display.clearDisplay();
     display.setCursor(0, 0);
     display.showWarning("WiFi Lost");
     display.display();
   }
 
-  //switcher::loop();
+  switcher::loop();
   nvmem.loop();
   energy.loop();
-  //powersensors.loop();
+  powersensors.loop();
   //battery.loop();
   display.loop();
+
+  // #ifdef DEBUG_PRINT
+  // static uint32_t nextDebugPower = 0;
+  // if (millis() > nextDebugPower)
+  // {
+  //   nextDebugPower = millis() + 1000;
+  //   Serial.flush();
+
+  //   float u = 1.0f, i = 0.01f, p = 100.0f;
+  //   for (uint8_t channel = 0; channel < e_psens_num_channels; channel++)
+  //   {
+  //     const e_psens_channel e_ch = static_cast<e_psens_channel>(channel);
+  //     // u = powersensors.getVoltage(e_ch);
+  //     i = powersensors.getCurrent(e_ch);
+  //     // p = powersensors.getPower(e_ch);
+  //     div_t 
+  //       qru = div(u * 100, 100),
+  //       qri = div(i * 10000, 10000),
+  //       qrp = div(p * 100, 100);
+
+  //     Serial.printf_P(PSTR("CH%u;U = %2d.%05u;I = %2d.%02u;P = %2d.%02u\n"), channel, qru.quot, qru.rem, qri.quot, qri.rem, qrp.quot, qrp.rem);
+  //     delay(200);
+  //   }
+  //   Serial.print('\n');
+  // }
+  // #endif
 }

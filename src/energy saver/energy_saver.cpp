@@ -51,11 +51,7 @@ uint32_t energySaver::loop (const uint32_t maxSleepTime)
     if (_modemSleep && maxSleepTime)
     {
         uint32_t sleepStart = millis();
-        digitalWrite(LEDPIN, HIGH);
         delay(std::min<uint32_t>(maxSleepTime, _sleepLimit));
-
-        if (!WiFi.isConnected() || ((millis() - _wifiConnSince) < 60000))
-            digitalWrite(LEDPIN, LOW);
             
         sleepDuration = millis() - sleepStart;
     }

@@ -44,11 +44,11 @@ typedef enum
     e_ina3221_conv_140us    = 0,
     e_ina3221_conv_204us    = 1,
     e_ina3221_conv_332us    = 2,
-    e_ina3221_conv_1100us   = 3,
-    e_ina3221_conv_2116us   = 4,
-    e_ina3221_conv_4156us   = 5,
-    e_ina3221_conv_8224us   = 6,
-    e_ina3221_conv_us       = 7
+    e_ina3221_conv_558us    = 3,
+    e_ina3221_conv_1100us   = 4,
+    e_ina3221_conv_2116us   = 5,
+    e_ina3221_conv_4156us   = 6,
+    e_ina3221_conv_8224us   = 7
 } convTime;
 
 }
