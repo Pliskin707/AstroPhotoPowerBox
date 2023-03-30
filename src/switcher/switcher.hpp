@@ -21,6 +21,28 @@
 namespace switcher
 {
 
+typedef enum 
+{
+        e_locked_wait4release,
+        e_locked_idle, 
+        e_unlocking_hold, 
+        e_unlocking_wait4release, 
+        e_unlocking_release_delay,
+        e_unlocking_wait4ack,
+        e_unlocked_idle
+} keyLockState;
+
+typedef enum 
+{
+    e_consumers_off_idle,
+    e_consumers_off_prepare_activation,
+    e_consumers_on_subs_off,
+    e_consumers_on_subs_activation,
+    e_consumers_on_idle,
+    e_consumers_on_prepare_power_down,
+    e_consumers_on_wait4pc_shutdown
+} consumersState;
+
 typedef struct
 {
     uint32_t lastButtonPressTime;
@@ -38,13 +60,15 @@ void setConsumers (const bool on);
 void setMount (const bool on);
 void setCamera (const bool on);
 void setCharger (const bool on);
-void setHeater (const uint_fast8_t heaterNr, const float powerLimit);
+void setHeater (const uint_fast8_t heaterNr, const float powerLimit);   // sets the power limit in Watts
 bool getConsumers (void);
 bool getMount (void);
 bool getCamera (void);
 bool getCharger (void);
 float getHeater (const uint_fast8_t heaterNr);    // returns heater setting in percent
-
+int getButtonLedPwm (void); // for debugging
+keyLockState getKeyLockState (void);
+consumersState getConsumersState (void);
 }
 
 #endif

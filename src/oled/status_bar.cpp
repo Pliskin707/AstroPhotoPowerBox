@@ -1,8 +1,12 @@
 #include "status_bar.hpp"
 
 static const int8_t wifiStrengthValues[4]   = {-70, -67, -60, -56};    // quality icon bars: better than -56dbm = very good, -70 or worse = very bad
+
+// direction: horizontal (left most pixel is the MSB of Byte0; next line (y + 1) is Byte 1, ...)
 const unsigned char NoWifiSymbol[] PROGMEM  = {0x18, 0x66, 0x46, 0x89, 0x91, 0x62, 0x66, 0x18};
 const unsigned char StandbySymbol[] PROGMEM = {0x18, 0x5A, 0x5A, 0x99, 0x81, 0x42, 0x66, 0x18};
+const unsigned char LockedSymbol[] PROGMEM  = {0x00, 0x70, 0x88, 0x88, 0xF8, 0xD8, 0xD8, 0xF8};
+const unsigned char UnlckdSymbol[] PROGMEM  = {0x70, 0x88, 0x80, 0x80, 0xF8, 0xD8, 0xD8, 0xF8};
 
 std::shared_ptr<barSymbol> statusBar::addSymbol (const uint32_t symbolFlag)
 {
@@ -15,6 +19,7 @@ std::shared_ptr<barSymbol> statusBar::addSymbol (const uint32_t symbolFlag)
         case STATUS_SYM_WIFI_ICON:      symPointer = std::make_shared<wifiStrengthIcon>();      break;
         case STATUS_SYM_KEEP_AWAKE:     symPointer = std::make_shared<standbyIcon>();           break;
         case STATUS_SYM_PLAYER_NAME:    symPointer = std::make_shared<playerName>();            break;
+        case STATUS_SYM_LOCK_ICON:      symPointer = std::make_shared<lockIcon>();              break;
     }
 
     if (symPointer)
@@ -169,4 +174,10 @@ void wifiStrengthIcon::printSym(STATUS_CALL_PARAMS)
     // draw the bars
     for (uint_fast16_t bar = 0, posX = 7 + _posX, posY = 6 + _posY, height = 2; (bar < 4) && (wifidbm >= wifiStrengthValues[bar]); bar++, posX -= 2, posY -=2, height += 2)
         pOled->drawFastVLine(posX, posY, height, SSD1306_WHITE);
+}
+
+void lockIcon::printSym(STATUS_CALL_PARAMS)
+{
+    const auto &symMem = (switcher::getKeyLockState() == switcher::keyLockState::e_unlocked_idle) ? UnlckdSymbol : LockedSymbol;
+    pOled->drawBitmap(_posX, _posY, symMem, 5, 8, SSD1306_WHITE);
 }

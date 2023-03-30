@@ -17,7 +17,7 @@ void statusDisplay::setup (void)
     setTextWrap(false);
     showStartupScreen();
     dim(true);
-    _statusBar.setup(STATUS_SYM_WIFI_ICON);
+    _statusBar.setup(STATUS_SYM_WIFI_ICON | STATUS_SYM_LOCK_ICON);
 }
 
 void statusDisplay::loop(void)
@@ -28,12 +28,24 @@ void statusDisplay::loop(void)
     if (sysTime >= _nextBarUpdate)
     {
         _nextBarUpdate = sysTime + _barUpdateDelay;
+        clearDisplay();
 
         _statusBar.printStatus(this);
-        static float testSoC = 0;   // TODO replace with real SoC
-        showFullScreenSoC(testSoC);
-        testSoC++;
-        if (testSoC > 110.0f) testSoC = 0;
+        // static float testSoC = 0;   // TODO replace with real SoC
+        // showFullScreenSoC(testSoC);
+        // testSoC++;
+        // if (testSoC > 110.0f) testSoC = 0;
+
+        const auto &btnInfo = switcher::getButtonInfo();
+        setCursor(0, 0);
+        printf_P(PSTR("LED:%5u"), switcher::getButtonLedPwm());
+        setCursor(0, 8);
+        printf_P(PSTR("Lock: %u; Cns: %u"), switcher::getKeyLockState(), switcher::getConsumersState());
+        setCursor(0, 16);
+        printf_P(PSTR("PrsDur:%6lu ms"), btnInfo.lastButtonReleaseTime - btnInfo.lastButtonPressTime);
+        setCursor(0, 24);
+        printf_P(PSTR("Num:%d (%s)"), btnInfo.numPressesSinceStart, (btnInfo.pressed ? "pressed":"released"));
+
         show = true;
     }
 

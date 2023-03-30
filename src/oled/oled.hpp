@@ -11,6 +11,7 @@
 #include "energy saver/energy_saver.hpp"
 #include "non volatile/non_volatile.hpp"
 #include "battery/battery.hpp"
+#include "switcher/switcher.hpp"
 
 namespace pliskin
 {

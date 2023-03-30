@@ -9,6 +9,7 @@
 #include "energy saver/energy_saver.hpp"
 #include "communication/communication_types.hpp"
 #include "non volatile/non_volatile.hpp"
+#include "switcher/switcher.hpp"
 
 #define STATUS_SYM_BAT_ICON     (1 << 0)
 #define STATUS_SYM_BAT_PERCENT  (1 << 1)
@@ -16,6 +17,7 @@
 #define STATUS_SYM_WIFI_VALUE   (1 << 3)
 #define STATUS_SYM_PLAYER_NAME  (1 << 4)
 #define STATUS_SYM_KEEP_AWAKE   (1 << 5)
+#define STATUS_SYM_LOCK_ICON    (1 << 6)
 
 #define STATUS_CALL_PARAMS      Adafruit_SSD1306 * const pOled, const float SoC, const int16_t wifidbm, const String &user, const bool keepAwake, const bool charging
 
@@ -79,6 +81,14 @@ class playerName : public barSymbol
         playerName() {_width = 1; _height = 8;};
         void printSym (STATUS_CALL_PARAMS) override;
         uint32_t getType (void) const override {return STATUS_SYM_PLAYER_NAME;};
+};
+
+class lockIcon : public barSymbol
+{
+    public:
+        lockIcon() {_width = 5; _height = 8;};
+        void printSym (STATUS_CALL_PARAMS) override;
+        uint32_t getType (void) const override {return STATUS_SYM_LOCK_ICON;};
 };
 
 class statusBar
