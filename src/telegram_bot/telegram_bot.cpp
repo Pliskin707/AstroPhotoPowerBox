@@ -41,16 +41,28 @@ static void _pingRequested (const TBMessage &queryMsg)
 
 static void _subrelayConsumers (const TBMessage &queryMsg)
 {
-    bool requestedState = false;
+    bool requestedState = false;    // TODO make selectable with another keyboard
 
+    // [inline mention of a user](tg://user?id=123456789)
+    String editText = "[" + queryMsg.sender.firstName;
+    editText += " ";
+    editText += queryMsg.sender.lastName;
+    editText += "]\nVerbraucher werden ";
+    editText += (requestedState ? "eingeschaltet":"ausgeschaltet");
+    telegramBot.editMessage(queryMsg, editText, "");
+    telegramBot.endQuery(queryMsg, "", false);
+    switcher::setConsumers(requestedState);
+}
+
+static void _subrelayNotImplemented (const TBMessage &queryMsg)
+{
     // [inline mention of a user](tg://user?id=123456789)
     String editText = "[" + queryMsg.sender.firstName;
     editText += " ";
     editText += queryMsg.sender.lastName;
     editText += "](tg://user?id=";
     editText += String(queryMsg.sender.id);
-    editText += "\\) Verbraucher werden ";
-    editText += (requestedState ? "eingeschaltet":"ausgeschaltet");
+    editText += "\\) ";
     editText += " User:";
     editText += queryMsg.sender.username;
     telegramBot.editMessage(queryMsg, editText, "");
@@ -74,9 +86,9 @@ bool AstroTelegramBot::begin()
 
     _relayKeyboard.addButton("\xE2\x9A\xA1 Verbraucher", "RelayConsumers", KeyboardButtonQuery, _subrelayConsumers);
     _relayKeyboard.addRow();
-    _relayKeyboard.addButton("\xF0\x9F\x94\x8C Ladegerät", "RelayCharger", KeyboardButtonQuery, _subrelayConsumers);
+    _relayKeyboard.addButton("\xF0\x9F\x94\x8C Ladegerät", "RelayCharger", KeyboardButtonQuery, _subrelayNotImplemented);
     _relayKeyboard.addRow();
-    _relayKeyboard.addButton("\xF0\x9F\x94\xAD Montierung", "RelayMount", KeyboardButtonQuery, _subrelayConsumers);
+    _relayKeyboard.addButton("\xF0\x9F\x94\xAD Montierung", "RelayMount", KeyboardButtonQuery, _subrelayNotImplemented);
     _relayKeyboard.addRow();
     _relayKeyboard.addButton(TBOT_CANCEL, "AbortKeyboard", KeyboardButtonQuery, _abortKeyboard);
     // 	\xF0\x9F\x92\xBB computer
@@ -167,6 +179,12 @@ void AstroTelegramBot::_handleQuery(const TBMessage &msg)
         buf[sizeof(buf) - 1] = 0;
 
         endQuery(msg, buf, false);
+        switch (relayNr)
+        {
+            case 0: switcher::setConsumers(requestedState); break;
+            case 1: switcher::setCharger(requestedState); break;
+            case 2: switcher::setMount(requestedState); break;
+        }
     }
     else
         endQuery(msg, String("Unknown command: " + msg.callbackQueryData).c_str(), true);

@@ -36,6 +36,8 @@ static bool mDNS_init_ok = false;
 
 
 void setup() {
+  switcher::setup();
+
   #ifdef DEBUG_PRINT
   Serial.begin(115200, SERIAL_8N1, SERIAL_TX_ONLY);
   #else
@@ -81,7 +83,6 @@ void setup() {
   // TODO sensor calibration
 
   powersensors.setup();
-  switcher::setup();
 
   display.clearDisplay();
 }
@@ -122,11 +123,9 @@ void loop() {
   switcher::loop();
   nvmem.loop();
   energy.loop(0);
-  // powersensors.loop();
+  powersensors.loop();
   //battery.loop();
   display.loop();
-
-  dprintf("Wifi strenght: %ddB\n", WiFi.RSSI());
 
   // #ifdef DEBUG_PRINT
   // static uint32_t nextDebugPower = 0;

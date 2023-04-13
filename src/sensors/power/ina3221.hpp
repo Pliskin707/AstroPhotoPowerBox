@@ -27,7 +27,7 @@ class sensor : private nonCopyable
         uint16_t _configRegister    = 0x7007 | 
                                         (e_ina3221_avg_4 << 9)       |  // average 4 samples
                                         (e_ina3221_conv_1100us << 6) |  // bus voltage conversion time
-                                        (e_ina3221_conv_1100us << 3);   // shunt voltage conversion time
+                                        (e_ina3221_conv_4156us << 3);   // shunt voltage conversion time
 
         void _prepareWire (void);
         bool _setRegisterPointer (const uint8_t regAddr);

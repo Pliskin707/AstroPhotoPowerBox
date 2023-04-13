@@ -36,6 +36,7 @@ void statusDisplay::loop(void)
         // testSoC++;
         // if (testSoC > 110.0f) testSoC = 0;
 
+        /* Button logic test 
         const auto &btnInfo = switcher::getButtonInfo();
         setCursor(0, 0);
         printf_P(PSTR("LED:%5u"), switcher::getButtonLedPwm());
@@ -45,6 +46,18 @@ void statusDisplay::loop(void)
         printf_P(PSTR("PrsDur:%6lu ms"), btnInfo.lastButtonReleaseTime - btnInfo.lastButtonPressTime);
         setCursor(0, 24);
         printf_P(PSTR("Num:%d (%s)"), btnInfo.numPressesSinceStart, (btnInfo.pressed ? "pressed":"released"));
+        */
+
+        /* Current sensor debugging
+        */
+        const auto &btnInfo = switcher::getButtonInfo();
+        e_psens_channel e_channel = static_cast<e_psens_channel>(btnInfo.numPressesSinceStart % e_psens_num_channels);
+        setCursor(0, 0);
+        printf_P(PSTR("%d:%+02.1fV  %+01.3fA\n%+02.3fW"), 
+            e_channel,
+            powersensors.getVoltage(e_channel),
+            powersensors.getCurrent(e_channel),
+            powersensors.getPower(e_channel));
 
         show = true;
     }

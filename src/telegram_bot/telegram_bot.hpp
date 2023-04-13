@@ -11,6 +11,7 @@
 #include "config.h"
 #include "wifiauth2.h"
 #include "oled/oled.hpp"
+#include "switcher/switcher.hpp"
 
 class AstroTelegramBot : public AsyncTelegram2
 {

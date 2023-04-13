@@ -8,8 +8,8 @@
 #include "sensors/power/psens.hpp"
 #include "battery/battery.hpp"
 
-#define SWITCHER_PIN_CONSUMERS  (10)    // SD3 (Caution: this pin can only be used in DIO mode, see https://nodemcu.readthedocs.io/en/1.5.4.1-final/hardware-faq/#whats-the-different-between-dio-and-qio-mode)
-#define SWITCHER_PIN_MOUNT      (12)    // D6
+#define SWITCHER_PIN_MOUNT      (10)    // SD3 (Caution: this pin can only be used in DIO mode, see https://nodemcu.readthedocs.io/en/1.5.4.1-final/hardware-faq/#whats-the-different-between-dio-and-qio-mode)
+#define SWITCHER_PIN_CONSUMERS  (12)    // D6
 #define SWITCHER_PIN_CHARGER    (13)    // D7
 #define SWITCHER_PIN_CAMERA     (14)    // D8 (boot fails if pulled high, therefore only connected to a BJT base via 10k resistor)
 

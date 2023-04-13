@@ -4,6 +4,7 @@
 #include <ArduinoOTA.h>
 #include <LittleFS.h>
 #include "oled/oled.hpp"
+#include "switcher/switcher.hpp"
 
 namespace pliskin
 {

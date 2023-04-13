@@ -55,6 +55,9 @@ void ota::begin (const char * const deviceName, statusDisplay * const pDisplay)
 
     ArduinoOTA.onEnd([]() 
     {
+        switcher::setConsumers(false);
+        switcher::setHeater(0, 0);
+        switcher::setHeater(1, 0);
         if (_pDisplay)
         {
             _pDisplay->clearDisplay();

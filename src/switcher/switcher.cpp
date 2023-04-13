@@ -71,7 +71,7 @@ static bool _buttonLoop (void)
 
         case e_unlocking_hold:
         {
-            _setLedPwm(0x8000);
+            _setLedPwm(511);
 
             // keep the button presse for about one second
             if (!btnInfo.pressed)
@@ -124,7 +124,7 @@ static bool _buttonLoop (void)
 
         case e_unlocking_wait4ack:
         {
-            _setLedPwm(0xffff);
+            _setLedPwm(1023);
 
             // wait for a final button press to acknowledge the unlock procedure
             if (btnInfo.pressed)
@@ -142,7 +142,7 @@ static bool _buttonLoop (void)
 
         case e_unlocked_idle:
         {
-            const int ledPwmVal = btnInfo.pressed ? 0xFFFF : (consumerPowerRequest ? 0x0400 : 5);
+            const int ledPwmVal = btnInfo.pressed ? 1023 : (consumerPowerRequest ? 255 : 5);
             _setLedPwm(ledPwmVal);
 
             // auto-lock after a minute
@@ -233,6 +233,12 @@ static void _consumerPowerLoop (const bool requestFromButton)
 
         case e_consumers_on_idle:
         {
+            //! debug
+            if (timeSinceStateChange > 60000)
+                setHeater(1, 0);
+            else
+                setHeater(1, 3);
+
             if (!requestFromButton)
                 _consumersState = e_consumers_on_prepare_power_down;
         }
@@ -289,7 +295,8 @@ void setup (void)
     pinMode(SWITCHER_PIN_CHARGER, OUTPUT);
     pinMode(SWITCHER_PIN_CAMERA, OUTPUT);
 
-    analogWriteResolution(16);
+    analogWriteResolution(10);
+    analogWriteFreq(150);
     pinMode(SWITCHER_PIN_HEATER1, OUTPUT);
     pinMode(SWITCHER_PIN_HEATER2, OUTPUT);
     #ifdef DEBUG_PRINT
@@ -367,9 +374,9 @@ void setHeater (const uint_fast8_t heaterNr, const float powerLimit)
     // TODO create a PID regulator
     
     float factor = powerLimit / 15.0f;          // 15 Watt equals maximum for now
-    factor = fmaxf(1.0f, fminf(0.0f, factor));  // limit to 0..1
+    factor = fmaxf(0.0f, fminf(1.0f, factor));  // limit to 0..1
 
-    int pwmValue = (int) (factor * 65535.0f);   // 16 bit resolution);
+    int pwmValue = (int) (factor * 1023.0f);    // 10 bit resolution);
 
     // only update if the value differs
     if (pwmValue != prevPwmVal)
@@ -398,7 +405,7 @@ float getHeater (const uint_fast8_t heaterNr)
 {
     const auto& pwmValue = _heaterPwmValues[heaterNr != 0];
 
-    return ((float) pwmValue) / 655.35f;
+    return ((float) pwmValue) / 10.23f;
 }
 
 int getButtonLedPwm (void)
