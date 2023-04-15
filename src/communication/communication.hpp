@@ -29,6 +29,7 @@ class communication : private nonCopyable
         DeserializationError _jsonError;
         bool _hasNewData = false;
         uint32_t _lastRxTime = 0;
+        uint32_t _lastTxTime = 0;
 
         void _configureService (void);
         bool _read (void);

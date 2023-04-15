@@ -18,7 +18,6 @@ typedef struct
     float energy        = 0.0f;
     float voltage       = 0.0f;
     float current       = 0.0f;
-    bool isCharging     = false;
     uint32_t chargeSecondsRemainingToFullSoC        = 0;
     uint32_t chargeSecondsRemainingToBulkSoC        = 0;
     uint32_t dischargeSecondsRemainingToEmpty       = 0;
@@ -67,6 +66,9 @@ typedef struct
 // these are custom converters for ArduinoJson
 void convertToJson (const txContent &src, JsonVariant dst);
 void convertToJson (const consumerInfo &src, JsonVariant dst);
+void convertToJson (const batInfo &src, JsonVariant dst);
+void convertToJson (const dewSensorInfo &src, JsonVariant dst);
+void qualityToJson (const infoQuality &src, JsonVariant &dst);   // cannot convert enum using the "Argument Dependend Lookup", since enums are just ints
 void convertFromJson (JsonVariantConst src, rxContent &dst);
 
 #endif

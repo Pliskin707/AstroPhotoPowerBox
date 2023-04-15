@@ -49,7 +49,6 @@ void statusDisplay::loop(void)
         */
 
         /* Current sensor debugging
-        */
         const auto &btnInfo = switcher::getButtonInfo();
         e_psens_channel e_channel = static_cast<e_psens_channel>(btnInfo.numPressesSinceStart % e_psens_num_channels);
         setCursor(0, 0);
@@ -58,6 +57,24 @@ void statusDisplay::loop(void)
             powersensors.getVoltage(e_channel),
             powersensors.getCurrent(e_channel),
             powersensors.getPower(e_channel));
+        */
+        setCursor(0, 0);
+        e_psens_channel e_channel = e_psens_ch1_battery;
+        printf_P(PSTR("%d:%+02.1fV  %+02.3fW\n%+01.3fA (%d ADC)"), 
+            e_channel,
+            powersensors.getVoltage(e_channel),
+            powersensors.getPower(e_channel),
+            powersensors.getCurrent(e_channel),
+            powersensors.getAdcShunt(e_channel));
+
+        setCursor(0, 16);
+        e_channel = e_psens_ch2_dew_heater_1;
+        printf_P(PSTR("%d:%+02.1fV  %+02.3fW\n%+01.3fA (%d ADC)"), 
+            e_channel,
+            powersensors.getVoltage(e_channel),
+            powersensors.getPower(e_channel),
+            powersensors.getCurrent(e_channel),
+            powersensors.getAdcShunt(e_channel));
 
         show = true;
     }

@@ -51,7 +51,7 @@ static void _subrelayConsumers (const TBMessage &queryMsg)
     editText += (requestedState ? "eingeschaltet":"ausgeschaltet");
     telegramBot.editMessage(queryMsg, editText, "");
     telegramBot.endQuery(queryMsg, "", false);
-    switcher::setConsumers(requestedState);
+    switcher::setConsumers(requestedState); // TODO this needs to go throug the state machine! (or at least notify it)
 }
 
 static void _subrelayNotImplemented (const TBMessage &queryMsg)

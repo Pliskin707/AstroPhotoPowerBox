@@ -25,9 +25,9 @@ class sensor : private nonCopyable
 
         uint32_t _minReadDelay      = 10;
         uint16_t _configRegister    = 0x7007 | 
-                                        (e_ina3221_avg_4 << 9)       |  // average 4 samples
+                                        (e_ina3221_avg_512 << 9)     |
                                         (e_ina3221_conv_1100us << 6) |  // bus voltage conversion time
-                                        (e_ina3221_conv_4156us << 3);   // shunt voltage conversion time
+                                        (e_ina3221_conv_1100us << 3);   // shunt voltage conversion time
 
         void _prepareWire (void);
         bool _setRegisterPointer (const uint8_t regAddr);
@@ -47,6 +47,7 @@ class sensor : private nonCopyable
         void setVoltageCorrection (const uint_fast8_t channelIndex, const float factor, const float offset);
         void setCurrentCorrection (const uint_fast8_t channelIndex, const float factor, const float offset);
         void powerDown (void);  // disables measurement. The device will automatically be woken when new values are requested
+        int16_t getAdcShunt (const uint_fast8_t channelIndex) const;  // does **not** trigger reading new values
 
         static float calcCurrentFactorFromShunt (const float shuntOhm);
 };

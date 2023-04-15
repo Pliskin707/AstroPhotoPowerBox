@@ -246,6 +246,14 @@ void sensor::powerDown (void)
     _configRegister = prevConfigReg;
 }
 
+int16_t sensor::getAdcShunt(const uint_fast8_t channelIndex) const
+{
+    if (channelIndex >= INA3221_NUM_CH)
+        return INT16_MAX;
+
+    return _currents[channelIndex].adc;
+}
+
 float sensor::calcCurrentFactorFromShunt (const float shuntOhm)
 {
     float val = 0.0f;

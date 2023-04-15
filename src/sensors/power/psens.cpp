@@ -43,7 +43,7 @@ std::shared_ptr<ina3221::sensor> psens::getSensor(uint_fast8_t sensorIndex)
     return _sensors[sensorIndex];
 }
 
-std::shared_ptr<ina3221::sensor> psens::_getSensorAndChannel (const e_psens_channel channel, uint_fast8_t * sensChannel)
+std::shared_ptr<ina3221::sensor> psens::_getSensorAndChannel (const e_psens_channel channel, uint_fast8_t * sensChannel) const
 {
     div_t qr = div(static_cast<uint8_t>(channel), INA3221_NUM_CH);
     if (sensChannel)
@@ -67,4 +67,10 @@ float psens::getCurrent(const e_psens_channel channel)
 float psens::getPower(const e_psens_channel channel)
 {
     return _powers[channel];
+}
+
+int16_t psens::getAdcShunt (const e_psens_channel channel) const
+{
+    uint_fast8_t sensChannel = 0;
+    return _getSensorAndChannel(channel, &sensChannel)->getAdcShunt(sensChannel);
 }

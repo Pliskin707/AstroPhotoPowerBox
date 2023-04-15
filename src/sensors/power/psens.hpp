@@ -28,7 +28,7 @@ class psens : private nonCopyable
         uint32_t _updateDelay = 100;
         float _powers[e_psens_num_channels] = {0.0f};
 
-        std::shared_ptr<ina3221::sensor> _getSensorAndChannel (const e_psens_channel channel, uint_fast8_t * sensChannel = nullptr);
+        std::shared_ptr<ina3221::sensor> _getSensorAndChannel (const e_psens_channel channel, uint_fast8_t * sensChannel = nullptr) const;
 
     public:
         void setup (TwoWire * wire = &Wire, const uint8_t addr1 = INA3221_ADDR_GND, const uint8_t addr2 = INA3221_ADDR_VS);
@@ -37,6 +37,8 @@ class psens : private nonCopyable
         float getVoltage (const e_psens_channel channel);
         float getCurrent (const e_psens_channel channel);
         float getPower (const e_psens_channel channel);
+        float getAvgPower (const e_psens_channel channel) {return getPower(channel);};  // TODO power average
+        int16_t getAdcShunt (const e_psens_channel channel) const;
 };
 
 extern psens powersensors;
