@@ -12,6 +12,7 @@
 #include "non volatile/non_volatile.hpp"
 #include "battery/battery.hpp"
 #include "switcher/switcher.hpp"
+#include "screen_content.hpp"
 
 namespace pliskin
 {
@@ -22,18 +23,20 @@ class statusDisplay: public Adafruit_SSD1306
     private:
         statusBar _statusBar;
         uint32_t _nextBarUpdate = 0;
+        uint32_t _nextContentUpdate = 0;
         const uint32_t _barUpdateDelay = 50;
+        screenBaseClass * _screen = nullptr;
 
     public:
         void setup (void);
         void loop (void);
-        void showStartupScreen (void);
         int16_t centerText (const String &text);   // returns the start X-position of the text
         int16_t rightText (const String &text);    // returns the start X-position of the text
         void showWarning (const char * const text = nullptr);
         void printBarAt (const int y, const float percent, const char * const text = nullptr, const int height = 16);
         void setStatusBarVisible (const bool visible) {_nextBarUpdate = (visible ? 0 : UINT32_MAX);};
-        void showFullScreenSoC (const float SoC);
+        e_screen getScreen (void) const {return _screen ? _screen->getType() : e_screen::off;};
+        void setScreen (const e_screen screen);
 };
 
 };

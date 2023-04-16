@@ -15,9 +15,10 @@ void statusDisplay::setup (void)
     begin(SSD1306_SWITCHCAPVCC, 0x3C);
     setTextColor(SSD1306_WHITE, SSD1306_BLACK);
     setTextWrap(false);
-    showStartupScreen();
+    setScreen(e_screen::startup);
     dim(true);
     _statusBar.setup(STATUS_SYM_WIFI_ICON | STATUS_SYM_LOCK_ICON);
+    display();
 }
 
 void statusDisplay::loop(void)
@@ -25,56 +26,16 @@ void statusDisplay::loop(void)
     const uint32_t sysTime = millis();
     bool show = false;
 
+    if ((sysTime >= _nextContentUpdate) && _screen)
+    {
+        _nextContentUpdate = _screen->show(this);
+        show = true;
+    }
+
     if (sysTime >= _nextBarUpdate)
     {
         _nextBarUpdate = sysTime + _barUpdateDelay;
-        clearDisplay();
-
         _statusBar.printStatus(this);
-        // static float testSoC = 0;   // TODO replace with real SoC
-        // showFullScreenSoC(testSoC);
-        // testSoC++;
-        // if (testSoC > 110.0f) testSoC = 0;
-
-        /* Button logic test 
-        const auto &btnInfo = switcher::getButtonInfo();
-        setCursor(0, 0);
-        printf_P(PSTR("LED:%5u"), switcher::getButtonLedPwm());
-        setCursor(0, 8);
-        printf_P(PSTR("Lock: %u; Cns: %u"), switcher::getKeyLockState(), switcher::getConsumersState());
-        setCursor(0, 16);
-        printf_P(PSTR("PrsDur:%6lu ms"), btnInfo.lastButtonReleaseTime - btnInfo.lastButtonPressTime);
-        setCursor(0, 24);
-        printf_P(PSTR("Num:%d (%s)"), btnInfo.numPressesSinceStart, (btnInfo.pressed ? "pressed":"released"));
-        */
-
-        /* Current sensor debugging
-        const auto &btnInfo = switcher::getButtonInfo();
-        e_psens_channel e_channel = static_cast<e_psens_channel>(btnInfo.numPressesSinceStart % e_psens_num_channels);
-        setCursor(0, 0);
-        printf_P(PSTR("%d:%+02.1fV  %+01.3fA\n%+02.3fW"), 
-            e_channel,
-            powersensors.getVoltage(e_channel),
-            powersensors.getCurrent(e_channel),
-            powersensors.getPower(e_channel));
-        */
-        setCursor(0, 0);
-        e_psens_channel e_channel = e_psens_ch1_battery;
-        printf_P(PSTR("%d:%+02.1fV  %+02.3fW\n%+01.3fA (%d ADC)"), 
-            e_channel,
-            powersensors.getVoltage(e_channel),
-            powersensors.getPower(e_channel),
-            powersensors.getCurrent(e_channel),
-            powersensors.getAdcShunt(e_channel));
-
-        setCursor(0, 16);
-        e_channel = e_psens_ch2_dew_heater_1;
-        printf_P(PSTR("%d:%+02.1fV  %+02.3fW\n%+01.3fA (%d ADC)"), 
-            e_channel,
-            powersensors.getVoltage(e_channel),
-            powersensors.getPower(e_channel),
-            powersensors.getCurrent(e_channel),
-            powersensors.getAdcShunt(e_channel));
 
         show = true;
     }
@@ -82,21 +43,6 @@ void statusDisplay::loop(void)
     // show on screen
     if (show)
         display();
-}
-
-void statusDisplay::showStartupScreen (void)
-{
-    clearDisplay();
-    setCursor(0, 0);
-    setTextSize(2);
-    print(DEVICE_PREFIX);
-    setTextSize(1);
-    setCursor(0, 16);
-    print(F("Version: "));
-    print(VERSION_STRING);
-    setCursor(0, 24);
-    print(WiFi.macAddress().c_str());
-    display();
 }
 
 void statusDisplay::printBarAt (const int y, const float percent, const char * const text, const int height)
@@ -117,8 +63,6 @@ void statusDisplay::printBarAt (const int y, const float percent, const char * c
     if (text)
     {
         setCursor(0, textYPos);
-        // char text[10];
-        // itoa((int) percent, text, 10);
         const int16_t textXStart = centerText(text);
 
         const int16_t textXEnd = getCursorX();
@@ -198,48 +142,32 @@ void statusDisplay::showWarning (const char * const text)
     }
 }
 
-void statusDisplay::showFullScreenSoC (const float SoC)
+void statusDisplay::setScreen(const e_screen screen)
 {
-    const int16_t fillHeight = height() - 2 * 2;
-    const int16_t fillWidth = fillHeight * 2;
-    const int16_t rectWidth = fillWidth + 2 * 2;
-    int16_t iSoC = (int16_t) ((fmaxf(0.0f, fminf(100.0f, SoC)) / 100.0f) * fillWidth);
-
-    // carving method
-    fillRect(0, 0, rectWidth, height(), SSD1306_WHITE);
-    fillRect(rectWidth, 8, 3, (height() - 2 * 8), SSD1306_WHITE);
-    drawRect(1, 1, rectWidth - 2, height() - 2, SSD1306_BLACK);
-
-    // invert the content of the empty part
-    for (int fillLine = 0; fillLine < fillHeight; fillLine++)
+    e_screen e_prev = getScreen();
+    if (screen != e_prev)
     {
-        for (int vPos = iSoC + (fillLine / 3); vPos < fillWidth; vPos++)  // slightly angeled
+        if (_screen)
         {
-            const int16_t x = vPos + 2, y = fillLine + 2;
-            drawPixel(x, y, !getPixel(x, y));
+            delete(_screen);
+            _screen = nullptr;
         }
+
+        switch (screen)
+        {
+            case e_screen::home:            _screen = new homeScreen();                                                     break;
+            case e_screen::startup:         _screen = new startupScreen();                                                  break;
+            case e_screen::power_bat_cam:   _screen = new powerScreen(e_psens_ch1_battery, e_psens_ch6_imaging_cam);        break;
+            case e_screen::power_pc_mount:  _screen = new powerScreen(e_psens_ch4_pc, e_psens_ch5_mount);                   break;
+            case e_screen::power_heaters:   _screen = new powerScreen(e_psens_ch2_dew_heater_1, e_psens_ch3_dew_heater_2);  break;
+            case e_screen::idle:            _screen = new idleScreen();                                                     break;
+            case e_screen::off:             _screen = new offScreen();                                                      break;
+        }
+
+        clearDisplay();
+        _nextBarUpdate     = 0;
+        _nextContentUpdate = 0;
     }
-
-    // print text info
-    setTextSize(2);
-    setTextColor(SSD1306_WHITE, SSD1306_BLACK);
-    setCursor(rectWidth + 8, 0);
-    printf_P(PSTR("%3d"), (int) SoC);
-    setTextSize(1);
-    setCursor(getCursorX(), 8);
-    print('%');
-    // printf_P(PSTR("%03.0f%%"), SoC);
-    setTextSize(2);
-    setCursor(rectWidth + 8, 16);
-    printf_P(PSTR("%3d"), (int) battery.getCapacityRemaining());
-    setTextSize(1);
-    setCursor(getCursorX(), 24);
-    print("Wh");
-    // printf_P(PSTR("%3d Wh"), battery.getCapacityRemaining());
-
-    // restore default values
-    setTextSize(1);
-    setTextColor(SSD1306_WHITE, SSD1306_BLACK);
 }
 
 };

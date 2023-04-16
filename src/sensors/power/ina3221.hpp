@@ -25,7 +25,7 @@ class sensor : private nonCopyable
 
         uint32_t _minReadDelay      = 10;
         uint16_t _configRegister    = 0x7007 | 
-                                        (e_ina3221_avg_512 << 9)     |
+                                        (e_ina3221_avg_64 << 9)     |
                                         (e_ina3221_conv_1100us << 6) |  // bus voltage conversion time
                                         (e_ina3221_conv_1100us << 3);   // shunt voltage conversion time
 

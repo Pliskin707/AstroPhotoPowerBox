@@ -52,7 +52,7 @@ void communication::_send (void)
 
     tx.batteryInfo.quality = medium;
     tx.batteryInfo.SoC = battery.getSoC();
-    tx.batteryInfo.energy = battery.getCapacityRemaining();
+    tx.batteryInfo.energy = battery.getEnergyRemaining();
     tx.batteryInfo.voltage = voltage;
     tx.batteryInfo.current = current;
     tx.batteryInfo.chargeSecondsRemainingToFullSoC = 0;

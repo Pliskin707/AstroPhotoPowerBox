@@ -84,7 +84,7 @@ void setup() {
 
   powersensors.setup();
 
-  display.clearDisplay();
+  display.setScreen(e_screen::power_bat_cam);
 }
 
 void loop() {
