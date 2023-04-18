@@ -26,7 +26,6 @@ namespace pliskin {
         const float SoC         = battery.getSoC();
         int16_t iSoC = (int16_t) ((fmaxf(0.0f, fminf(100.0f, SoC)) / 100.0f) * fillWidth);
 
-        // carving method
         pOled->fillRect(0, 0, rectWidth, pOled->height(), SSD1306_WHITE);
         pOled->fillRect(rectWidth, 8, 3, (pOled->height() - 2 * 8), SSD1306_WHITE);
         pOled->drawRect(1, 1, rectWidth - 2, pOled->height() - 2, SSD1306_BLACK);

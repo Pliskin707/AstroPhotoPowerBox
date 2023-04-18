@@ -50,7 +50,7 @@ void communication::_send (void)
     tx.buttonPressed = btn.pressed;
     tx.wifiStrength = WiFi.RSSI();
 
-    tx.batteryInfo.quality = medium;
+    tx.batteryInfo.quality = battery.getSoCgood() ? good : medium;
     tx.batteryInfo.SoC = battery.getSoC();
     tx.batteryInfo.energy = battery.getEnergyRemaining();
     tx.batteryInfo.voltage = voltage;

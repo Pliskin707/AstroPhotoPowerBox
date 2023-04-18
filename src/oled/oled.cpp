@@ -18,7 +18,7 @@ void statusDisplay::setup (void)
     setScreen(e_screen::startup);
     dim(true);
     _statusBar.setup(STATUS_SYM_WIFI_ICON | STATUS_SYM_LOCK_ICON);
-    display();
+    loop();
 }
 
 void statusDisplay::loop(void)

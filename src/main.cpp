@@ -84,7 +84,7 @@ void setup() {
 
   powersensors.setup();
 
-  display.setScreen(e_screen::power_bat_cam);
+  display.setScreen(e_screen::home);
 }
 
 void loop() {
@@ -124,7 +124,7 @@ void loop() {
   nvmem.loop();
   energy.loop(0);
   powersensors.loop();
-  //battery.loop();
+  battery.loop();
   display.loop();
 
   // #ifdef DEBUG_PRINT
