@@ -1,8 +1,8 @@
 #include "esp_comm.hpp"
 
-ESP_comm::ESP_comm(QObject *parent) : QObject(parent)
+ESP_comm::ESP_comm(backend &backend, QObject *parent) : QObject(parent), _backend(backend)
 {
-    qDebug() << "ESP communication created" << endl;
+    qDebug() << "ESP communication created" << Qt::endl;
 
     connect(&_zeroconf, &QZeroConf::error, this, &ESP_comm::_ReportZCErr);
     connect(&_zeroconf, &QZeroConf::serviceAdded, this, &ESP_comm::_ZeroConfServiceSlot);
@@ -14,13 +14,13 @@ ESP_comm::ESP_comm(QObject *parent) : QObject(parent)
 
 void ESP_comm::_ReportZCErr(QZeroConf::error_t err)
 {
-    qWarning() << "ZeroConf Error" << QString("ZeroConf Error %1 reported").arg(err) << endl;
+    qWarning() << "ZeroConf Error" << QString("ZeroConf Error %1 reported").arg(err) << Qt::endl;
 }
 
 void ESP_comm::_parseRxData()
 {
     const auto &rx = _socket->receiveDatagram();
-//    qDebug() << "Data received:" << rx.data() << "from" << rx.senderAddress() << endl;
+//    qDebug() << "Data received:" << rx.data() << "from" << rx.senderAddress() << Qt::endl;
 
     if (rx.senderAddress().isEqual(_espAddr))
     {
@@ -36,10 +36,12 @@ void ESP_comm::_parseRxData()
 
         if ((err.error != QJsonParseError::NoError) || doc.isNull())
         {
-            qWarning() << "Parsing failed" << endl;
+            qWarning() << "Parsing failed" << Qt::endl;
         }
         else
         {
+            _backend.setDebugText(doc.toJson());
+
             val = jObj["time"];
             if (val.isDouble())
                 controllerTime = val.toInt();
@@ -69,22 +71,22 @@ void ESP_comm::_parseRxData()
 
 void ESP_comm::_sockErr(QAbstractSocket::SocketError err)
 {
-    qWarning() << "Socket error occurred:" << err << endl;
+    qWarning() << "Socket error occurred:" << err << Qt::endl;
 }
 
 void ESP_comm::_ZeroConfServiceSlot(QZeroConfService service)
 {
-    qDebug() << "New ZeroConf service" << service->type() << "/" << service->host() << "discovered" << endl << service << endl << endl;
+    qDebug() << "New ZeroConf service" << service->type() << "/" << service->host() << "discovered" << Qt::endl << service << Qt::endl << Qt::endl;
 
     if (!_socket)
     {
         _socket = new QUdpSocket(this);
         if (!_socket)
-            qCritical() << "Socket creation failed!" << endl;
+            qCritical() << "Socket creation failed!" << Qt::endl;
         else
         {
             connect(_socket, &QUdpSocket::readyRead, this, &ESP_comm::_parseRxData);
-            connect(_socket, QOverload<QAbstractSocket::SocketError>::of(&QUdpSocket::error), this, &ESP_comm::_sockErr);
+            connect(_socket, &QUdpSocket::errorOccurred, this, &ESP_comm::_sockErr);
             _socket->bind(service->port());
             _espAddr = service->ip();
         }

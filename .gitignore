@@ -4,3 +4,4 @@
 .vscode/launch.json
 .vscode/ipch
 /src/wifiauth2.h
+/gui/build-AstroBoxGUI-Desktop_Qt_6_5_0_MinGW_64_bit-Debug

@@ -48,6 +48,7 @@ void communication::_send (void)
     tx.timestamp = millis();
     tx.pressCount = btn.numPressesSinceStart;
     tx.buttonPressed = btn.pressed;
+    tx.shutdownPC = (switcher::getConsumersState() == switcher::consumersState::e_consumers_on_wait4pc_shutdown);
     tx.wifiStrength = WiFi.RSSI();
 
     tx.batteryInfo.quality = battery.getSoCgood() ? good : medium;

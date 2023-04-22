@@ -4,6 +4,7 @@ void convertToJson (const txContent &src, JsonVariant dst)
 {
     dst["time"]             = src.timestamp;
     dst["button pressed"]   = src.buttonPressed;
+    dst["shutdown PC"]      = src.shutdownPC;
     dst["press count"]      = src.pressCount;
     dst["wifi dbm"]         = src.wifiStrength;
 
@@ -63,7 +64,6 @@ void qualityToJson(const infoQuality &src, JsonVariant &dst)
         default:                    dst["quality"] = "bad";     break;
     }
 }
-
 
 void convertFromJson (JsonVariantConst src, rxContent &dst)
 {

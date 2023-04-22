@@ -46,6 +46,7 @@ typedef struct
     uint32_t timestamp  = 0;
     uint32_t pressCount = 0;
     bool buttonPressed  = false;
+    bool shutdownPC = false;
     int8_t wifiStrength = 0;
 
     batInfo batteryInfo;

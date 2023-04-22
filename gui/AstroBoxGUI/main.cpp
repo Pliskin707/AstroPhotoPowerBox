@@ -3,8 +3,10 @@
 
 #include <QLocale>
 #include <QTranslator>
+#include <QQmlContext>
 
 #include "esp_comm/esp_comm.hpp"
+#include "backend.hpp"
 
 int main(int argc, char *argv[])
 {
@@ -24,7 +26,8 @@ int main(int argc, char *argv[])
         }
     }
 
-    ESP_comm comm(&app);
+    backend backendData(&app);
+    ESP_comm comm(backendData, &app);
     QQmlApplicationEngine engine;
     const QUrl url(QStringLiteral("qrc:/main.qml"));
     QObject::connect(&engine, &QQmlApplicationEngine::objectCreated,
@@ -32,7 +35,9 @@ int main(int argc, char *argv[])
         if (!obj && url == objUrl)
             QCoreApplication::exit(-1);
     }, Qt::QueuedConnection);
+    engine.rootContext()->setContextProperty("backend", &backendData);
     engine.load(url);
+
 
     return app.exec();
 }

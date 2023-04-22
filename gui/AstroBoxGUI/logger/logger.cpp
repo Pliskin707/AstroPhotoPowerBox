@@ -28,6 +28,6 @@ void logger::append(const uint32_t controllerTime, const float voltage, const fl
     if (!_file->size())
         _stream << "Date" << _separator << "Time" << _separator << "Controller" << _separator << "Battery Voltage" << _separator << "Battery Current";
 
-    _stream << endl << now.toString(QStringLiteral("yyyy.MM.dd")) << _separator << now.toString(QStringLiteral("hh:mm:ss.z")) << _separator
+    _stream << Qt::endl << now.toString(QStringLiteral("yyyy.MM.dd")) << _separator << now.toString(QStringLiteral("hh:mm:ss.z")) << _separator
             << QString::number(controllerTime) << _separator << voltage << _separator << current;
 }
