@@ -51,7 +51,7 @@ namespace pliskin {
         // printf_P(PSTR("%03.0f%%"), SoC);
         pOled->setTextSize(2);
         pOled->setCursor(rectWidth + 8, 16);
-        pOled->printf_P(PSTR("%3d"), (int) battery.getEnergyRemaining());
+        pOled->printf_P(PSTR("%3d"), (int) battery.getEnergyRemainingWh());
         pOled->setTextSize(1);
         pOled->setCursor(pOled->getCursorX(), 24);
         pOled->print("Wh");

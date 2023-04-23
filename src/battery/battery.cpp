@@ -57,9 +57,12 @@ static float _getSoCFromRestingVoltage (const float restingBatVoltage)
 
 void lifepo4_battery::loop (void)
 {
+    if (!_initialized)
+        _initFromMemory();
+
     if (millis() >= (_lastUpdate + _updateDelay))
     {
-        const float actPower = powersensors.getPower(e_psens_ch1_battery);  // call this first so the (time consuming) TWI communication is handled before the time is calculated
+        // call this first so the (time consuming) TWI communication is handled before the time is calculated
         const float voltage = powersensors.getVoltage(e_psens_ch1_battery);
         const float current = powersensors.getCurrent(e_psens_ch1_battery);
         const uint32_t sysTime = millis();
@@ -68,14 +71,15 @@ void lifepo4_battery::loop (void)
         {
             // calculate the area (= capacity) between the previous and actual power reading with linear interpolation
             const float deltaTime = ((float) (sysTime - _lastUpdate)) / 1000.0f;
-            const float powerSum = actPower + _prevPower;
-            const float deltaEnergy = (powerSum * deltaTime) / 2.0f;
+            const float currentSum = current + _prevCurrent;
+            const float deltaCharge = (currentSum * deltaTime) / 2.0f;
 
             // update the known capacity
-            _energyRemaining += deltaEnergy;
+            _chargeRemaining += deltaCharge;
+            nvmem.setRemainingCharge(fmaxf(_chargeRemaining, 0.0f));    // don't store negative charge values
 
             // update the state of charge
-            float actSoC = _energyRemaining * 100.0f / _energyTotal;
+            float actSoC = _chargeRemaining / _chargeTotal;
             actSoC = fminf(100.0f, fmaxf(0.0f, actSoC));
             // TODO plausibility with measured battery voltage
 
@@ -94,7 +98,19 @@ void lifepo4_battery::loop (void)
         }
 
         _lastUpdate  = sysTime;
-        _prevPower   = actPower;
+        _prevCurrent = current;
         _prevVoltage = voltage;
     }
+}
+
+float lifepo4_battery::getEnergyRemainingWh(void) const
+{
+    return _chargeRemaining * (1.0f/3600.0f) * _prevVoltage;    // ([As] -> [Ah]) * batVoltage
+}
+void lifepo4_battery::_initFromMemory(void)
+{
+    _initialized = true;
+
+    const auto &prevStats = nvmem.getStats();
+    _chargeRemaining = prevStats.remainingCharge;
 }

@@ -2,6 +2,7 @@
 #define __TELEGRAM_BOT_H__
 
 #include <Arduino.h>
+#include <queue.h>
 
 #include <ESP8266WiFi.h>
 #include <ESP8266mDNS.h>
@@ -9,9 +10,17 @@
 #include "AsyncTelegram2.h"
 
 #include "config.h"
+#include "rb.h"
 #include "wifiauth2.h"
 #include "oled/oled.hpp"
 #include "switcher/switcher.hpp"
+
+typedef enum
+{
+    e_noCommand = 0,
+    e_powerConsumers_on,
+    e_powerConsumers_off
+} e_telegram_command;
 
 class AstroTelegramBot : public AsyncTelegram2
 {
@@ -34,6 +43,7 @@ class AstroTelegramBot : public AsyncTelegram2
     public:
         bool begin ();
         void loop ();
+        e_telegram_command getAndClearCommand (void);
 };
 
 extern AstroTelegramBot telegramBot;

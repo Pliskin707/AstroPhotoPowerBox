@@ -1,4 +1,8 @@
 #include "status_bar.hpp"
+#include "energy saver/energy_saver.hpp"
+#include "communication/communication_types.hpp"
+#include "non volatile/non_volatile.hpp"
+#include "switcher/switcher.hpp"
 
 static const int8_t wifiStrengthValues[4]   = {-70, -67, -60, -56};    // quality icon bars: better than -56dbm = very good, -70 or worse = very bad
 

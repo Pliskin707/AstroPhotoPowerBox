@@ -22,8 +22,9 @@ class ota
 
     public:
         static void begin (const char * const deviceName, statusDisplay * const pDisplay = nullptr);
-        static void handle (void) {ArduinoOTA.handle();};
+        static void handle (void);
         static bool isUpdating (void);
+        static bool ready4Update (void);
 };
 
 };

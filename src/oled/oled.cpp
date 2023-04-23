@@ -26,7 +26,7 @@ void statusDisplay::loop(void)
     const uint32_t sysTime = millis();
     bool show = false;
 
-    if ((sysTime >= _nextContentUpdate) && _screen)
+    if ((sysTime >= _nextContentUpdate) && (sysTime > _noContentUntil) && _screen)
     {
         _nextContentUpdate = _screen->show(this);
         show = true;

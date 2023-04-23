@@ -6,10 +6,7 @@
 #include <memory>
 
 #include "config.hpp"
-#include "energy saver/energy_saver.hpp"
-#include "communication/communication_types.hpp"
-#include "non volatile/non_volatile.hpp"
-#include "switcher/switcher.hpp"
+
 
 #define STATUS_SYM_BAT_ICON     (1 << 0)
 #define STATUS_SYM_BAT_PERCENT  (1 << 1)

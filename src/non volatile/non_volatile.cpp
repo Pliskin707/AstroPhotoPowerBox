@@ -22,7 +22,7 @@ non_volatile::non_volatile ()
         }
         else
         {
-            //_user = doc["user"] | "";   // empty string as default value
+            _savedStats = _stats = doc.as<batStats>();
         }
 
         fi.close();
@@ -49,25 +49,46 @@ bool non_volatile::save(const batStats &stats)
             doc.clear();
         }
 
-        // replace the known values TODO
-        //doc["user"] = _user;
+        display.clearDisplay();
+        display.setCursor(0, 0);
+
+        // replace the known values
+        doc = stats;
 
         // write the file
-        const bool success = fi.seek(0, fs::SeekMode::SeekSet);    // is this ".setPosition(0)" ?
+        bool success = fi.seek(0, fs::SeekMode::SeekSet);    // is this ".setPosition(0)" ?
         if (success)
         {
             const size_t bytesWritten = serializeJson(doc, fi); 
-            (void) bytesWritten; // suppress "unused variable" warning if no debug print is enabled
             dprintf("%u bytes written to \"%s\"", bytesWritten, NVMEM_FILEPATH);
+
+            success = bytesWritten > 0;
+            display.print(F("Battery stats\nstored."));
         }
         else
+        {
             dprintf("Could not write to \"%s\"", NVMEM_FILEPATH);
+            display.print(F("Battery stats\nFAILED!"));
+        }
+        display.suppressContentTemporary(3000);
         
         fi.close();
+        if (success)
+            _savedStats = stats;
+
         return success;
     }
 
     return false;
+}
+
+void non_volatile::setRemainingCharge(const float remainingCharge)
+{
+    if (remainingCharge != _stats.remainingCharge)
+    {
+        _modify();
+        _stats.remainingCharge = remainingCharge;
+    }
 }
 
 uint32 non_volatile::getTimeSinceLastModification(void) const
@@ -77,11 +98,46 @@ uint32 non_volatile::getTimeSinceLastModification(void) const
 
 void non_volatile::loop(void)
 {
-    if (getTimeSinceLastModification() > 60000) // TODO also when battery voltage is critical (maybe every 10 seconds then? or every 100 mWh?)
+     // TODO also when battery voltage is critical
+    if ((getTimeSinceLastModification() > 60000) || 
+        (fabsf(_savedStats.remainingCharge - _stats.remainingCharge) > (0.1f * 3600.0f))) // every 100 mAh
+    {
         save(_stats);
+    }
 }
 void non_volatile::_modify(void)
 {
     _dirty = true;
     _lastMod = millis();
+}
+
+bool convertToJson(const batStats& src, JsonVariant dst)
+{
+    dst[F("total coulomb charged")]     = src.totalCoulombCharged;
+    dst[F("total coulomb discharged")]  = src.totalCoulombDischarged;
+    dst[F("remaining charge")]          = src.remainingCharge;
+    // TODO store last calibration
+    // dst[F("last calibration")]          = src.lastCalibration;
+
+    return true;
+}
+
+void convertFromJson(JsonVariantConst src, batStats& dst)
+{
+    JsonVariantConst jVar;
+    dst = batStats();   // reset to default
+
+    jVar = src[F("total coulomb charged")];
+    if (jVar.is<float>())
+        dst.totalCoulombCharged = jVar.as<float>();
+    
+    jVar = src[F("total coulomb discharged")];
+    if (jVar.is<float>())
+        dst.totalCoulombDischarged = jVar.as<float>();
+
+    jVar = src[F("remaining charge")];
+    if (jVar.is<float>())
+        dst.remainingCharge = jVar.as<float>();
+
+    // TODO read last calibration
 }

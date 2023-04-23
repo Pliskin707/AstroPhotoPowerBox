@@ -8,7 +8,7 @@
 #include "sensors/power/psens.hpp"
 #include "battery/battery.hpp"
 #include "switcher_types.hpp"
-
+#include "telegram_bot/telegram_bot.hpp"
 namespace switcher
 {
 

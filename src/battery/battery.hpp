@@ -2,6 +2,8 @@
 #define __BATTERY_HPP__
 
 #include "sensors/power/psens.hpp"
+#include "switcher/switcher.hpp"
+#include "non volatile/non_volatile.hpp"
 
 class lifepo4_battery
 {
@@ -10,18 +12,21 @@ class lifepo4_battery
         uint32_t _updateDelay = 200;
         uint32_t _idleCurrentSince = 0;
         float _SoC = 0.0f;                  // [%]
-        float _energyRemaining = 0.0f;      // [Ws]
-        float _energyTotal = 384.0f * 3.6; // [Ws / 100%]   
-        float _prevPower = 0.0f;
+        float _chargeRemaining = 0.0f;      // [C = As]
+        float _chargeTotal = 30.0f * 36.0f; // [As / 100%]   
+        float _prevCurrent = 0.0f;
         float _prevVoltage = 0.0f;
-        bool _stored = false;
+        bool _initialized = false;
         bool _SoCgood = false;
+
+        void _initFromMemory (void);
 
     public:
         void loop (void);
-        float getSoC (void) const {return _SoC;};
-        float getEnergyRemaining (void) const {return _energyRemaining / 3600.0f;};
-        float getEnergyTotal (void) const {return _energyTotal / 3.6f;};
+        float getSoC (void) const {return _SoC;};                               // [%]
+        float getChargeRemaining (void) const {return _chargeRemaining;};       // [C = As]
+        float getEnergyRemainingWh (void) const;
+        float getCapacityTotal (void) const {return _chargeTotal * 100.0f;};    // [C = As]
         bool getSoCgood (void) const {return _SoCgood;};
         
 };

@@ -21,6 +21,8 @@ static X509List ta(telegram_cert);
 AstroTelegramBot telegramBot(botClient);
 #endif
 
+static  pliskin_ringbuffer::rb_base _pendingCommands = pliskin_ringbuffer::rb_base(sizeof(e_telegram_command), 10);
+
 static void _abortKeyboard (const TBMessage &queryMsg)
 {
     String editText = "Befehl \\\"" + queryMsg.text;
@@ -41,7 +43,7 @@ static void _pingRequested (const TBMessage &queryMsg)
 
 static void _subrelayConsumers (const TBMessage &queryMsg)
 {
-    bool requestedState = false;    // TODO make selectable with another keyboard
+    bool requestedState = !switcher::getConsumers();    // TODO make selectable with another keyboard
 
     // [inline mention of a user](tg://user?id=123456789)
     String editText = "[" + queryMsg.sender.firstName;
@@ -51,7 +53,9 @@ static void _subrelayConsumers (const TBMessage &queryMsg)
     editText += (requestedState ? "eingeschaltet":"ausgeschaltet");
     telegramBot.editMessage(queryMsg, editText, "");
     telegramBot.endQuery(queryMsg, "", false);
-    switcher::setConsumers(requestedState); // TODO this needs to go throug the state machine! (or at least notify it)
+
+    const e_telegram_command cmd = (requestedState ? e_powerConsumers_on : e_powerConsumers_off);
+    _pendingCommands.write(&cmd);
 }
 
 static void _subrelayNotImplemented (const TBMessage &queryMsg)
@@ -160,6 +164,14 @@ void AstroTelegramBot::loop()
             sendMessage(_msg, "Echo: " + _msg.text);
         }
     }
+}
+
+e_telegram_command AstroTelegramBot::getAndClearCommand(void) 
+{
+    e_telegram_command cmd = e_noCommand;
+    _pendingCommands.read(&cmd);
+    
+    return cmd;
 }
 
 void AstroTelegramBot::_handleQuery(const TBMessage &msg)

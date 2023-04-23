@@ -15,16 +15,19 @@ void ota::begin (const char * const deviceName, statusDisplay * const pDisplay)
 
     ArduinoOTA.onStart([]() 
     {
-        _sigUpdateStarted = true;
-        wifi_set_sleep_type(NONE_SLEEP_T);
-        LittleFS.end();
-
-        if (_pDisplay)
+        if (ready4Update())
         {
-            _pDisplay->clearDisplay();
-            _pDisplay->setCursor(0, 0);
-            _pDisplay->centerText("Updating");
-            _pDisplay->display();
+            _sigUpdateStarted = true;
+            wifi_set_sleep_type(NONE_SLEEP_T);
+            LittleFS.end();
+
+            if (_pDisplay)
+            {
+                _pDisplay->clearDisplay();
+                _pDisplay->setCursor(0, 0);
+                _pDisplay->centerText("Updating");
+                _pDisplay->display();
+            }
         }
     });
 
@@ -50,7 +53,10 @@ void ota::begin (const char * const deviceName, statusDisplay * const pDisplay)
 
     ArduinoOTA.onError([](ota_error_t error) 
     {
-        ESP.reset();
+        _pDisplay->clearDisplay();
+        _pDisplay->setCursor(0, 16);
+        _pDisplay->printf_P(PSTR("Update failed (%d)"), error);
+        _pDisplay->suppressContentTemporary(3000);
     });
 
     ArduinoOTA.onEnd([]() 
@@ -72,9 +78,20 @@ void ota::begin (const char * const deviceName, statusDisplay * const pDisplay)
     ArduinoOTA.begin();
 }
 
+void ota::handle(void)
+{
+    if (ready4Update())
+        ArduinoOTA.handle();
+}
+
 bool ota::isUpdating (void)
 {
     return _sigUpdateStarted != 0;
+}
+
+bool ota::ready4Update(void)
+{
+    return switcher::getConsumersState() == switcher::consumersState::e_consumers_off_idle;
 }
 
 };

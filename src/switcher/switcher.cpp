@@ -10,6 +10,7 @@ static int _ledPwmValue = 0;
 static keyLockState _keyLockState = e_locked_idle;
 static uint32_t _unlockDuration = 10000;
 static consumersState _consumersState = e_consumers_off_idle;
+static bool _consumerPowerRequest = false;
 
 static void IRAM_ATTR _buttonISR (void)
 {
@@ -43,7 +44,6 @@ static void _setLedPwm (const uint16_t pwmVal)
 
 static bool _buttonLoop (void)
 {
-    static bool consumerPowerRequest = false;
     const uint32_t sysTime = millis();
     const buttonInfo btnInfo = getButtonInfo();
 
@@ -142,7 +142,7 @@ static bool _buttonLoop (void)
 
         case e_unlocked_idle:
         {
-            const int ledPwmVal = btnInfo.pressed ? 1023 : (consumerPowerRequest ? 255 : 5);
+            const int ledPwmVal = btnInfo.pressed ? 1023 : (_consumerPowerRequest ? 255 : 5);
             _setLedPwm(ledPwmVal);
 
             // auto-lock after a minute
@@ -163,15 +163,15 @@ static bool _buttonLoop (void)
         ((sysTime - btnInfo.lastButtonReleaseTime) > 250))  // debounce 
     {
         // toggle the consumers power request
-        consumerPowerRequest ^= true;
-        dprintf("User power request is now %s\n", (consumerPowerRequest ? "ON":"OFF"))
+        _consumerPowerRequest ^= true;
+        dprintf("User power request is now %s\n", (_consumerPowerRequest ? "ON":"OFF"))
     }
 
     prevBtnPressCount = btnInfo.numPressesSinceStart;
-    return consumerPowerRequest;
+    return _consumerPowerRequest;
 }
 
-static void _consumerPowerLoop (const bool requestFromButton)
+static void _consumerPowerLoop (const bool requestedState)
 {
     const auto prevState = _consumersState;
     static uint32_t lastStateChange = 0;
@@ -181,7 +181,7 @@ static void _consumerPowerLoop (const bool requestFromButton)
     {
         case e_consumers_off_idle:
         {
-            if (requestFromButton)
+            if (requestedState)
                 _consumersState = e_consumers_off_prepare_activation;
             else
             {
@@ -239,7 +239,7 @@ static void _consumerPowerLoop (const bool requestFromButton)
             else
                 setHeater(1, 3);
 
-            if (!requestFromButton)
+            if (!requestedState)
                 _consumersState = e_consumers_on_prepare_power_down;
         }
         break;
@@ -256,7 +256,9 @@ static void _consumerPowerLoop (const bool requestFromButton)
 
         case e_consumers_on_wait4pc_shutdown:
         {
-            if ((powersensors.getCurrent(e_psens_ch4_pc) < 0.4) ||  // pc may use up to 300 mA while powered down
+            if (requestedState)
+                _consumersState = e_consumers_on_subs_activation;
+            else if ((powersensors.getCurrent(e_psens_ch4_pc) < 0.2) ||  // pc may use up to 57 mA while powered down
                 (timeSinceStateChange > 3600000))                   // timeout after one hour (don't make this too short in case the PC is performing updates)
                 _consumersState = e_consumers_off_idle;
         }
@@ -320,25 +322,16 @@ buttonInfo getButtonInfo (void)
 
 void loop (void)
 {
-    const bool requestedConsumerState = _buttonLoop();
-    _consumerPowerLoop(requestedConsumerState);
+    _buttonLoop();
+    switch (telegramBot.getAndClearCommand())
+    {
+        case e_noCommand: break;
+        case e_powerConsumers_off:  _consumerPowerRequest = false;  break;
+        case e_powerConsumers_on:   _consumerPowerRequest = true;   break;
+    }
+
+    _consumerPowerLoop(_consumerPowerRequest);
     _chargeSwitchLoop();
-
-    // const auto testCase = getButtonInfo().numPressesSinceStart % 5;
-    // bool cons = false, mnt = true, chrg = true; // all relays off
-
-    // switch (testCase)
-    // {
-    //     case 0: break;
-    //     case 1: cons = true; break;
-    //     case 2: mnt = false; break;
-    //     case 3: chrg = false; break;
-    //     case 4: cons = true; mnt = false; chrg = false; break;
-    // }    
-
-    // setConsumers(cons);
-    // setMount(mnt);
-    // setCharger(chrg);
 }
 
 void setConsumers (const bool on)
