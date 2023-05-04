@@ -4,7 +4,7 @@ QT += network
 CONFIG += c++11
 CONFIG += qmltypes
 
-QML_IMPORT_NAME = pliskin.astroboxgui.backend
+QML_IMPORT_NAME = Pliskin.Astroboxgui.Backend
 QML_IMPORT_MAJOR_VERSION = 1
 
 # You can make your code fail to compile if it uses deprecated APIs.
@@ -15,7 +15,8 @@ SOURCES += \
         backend.cpp \
         esp_comm/esp_comm.cpp \
         logger/logger.cpp \
-        main.cpp
+        main.cpp \
+        settings.cpp
 
 RESOURCES += qml.qrc
 
@@ -38,7 +39,8 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 HEADERS += \
     backend.hpp \
     esp_comm/esp_comm.hpp \
-    logger/logger.h
+    logger/logger.h \
+    settings.hpp
 
 DEFINES= QZEROCONF_STATIC
 

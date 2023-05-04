@@ -6,7 +6,6 @@
 #include <time.h>
 #include <non_copy_class.hpp>
 #include "projutils/projutils.hpp"
-#include "CRC16.h"
 #include "oled/oled.hpp"
 
 #define NVMEM_FILEPATH  "/nvmem.json"

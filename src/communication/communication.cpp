@@ -69,9 +69,9 @@ void communication::_send (void)
     conInfo->isPowered  = switcher::getCharger();
     conInfo->isActive   = (current > 0.1f);
     conInfo->voltage    = voltage;
-    conInfo->current    = current;
-    conInfo->power      = powersensors.getPower(e_psens_ch1_battery);
-    conInfo->avgPower   = powersensors.getAvgPower(e_psens_ch1_battery);
+    conInfo->current    = fmaxf(current, 0.0f);
+    conInfo->power      = conInfo->voltage * conInfo->current;
+    conInfo->avgPower   = conInfo->power;
 
     conInfo = &tx.pcInfo;
     e_channel = e_psens_ch4_pc;

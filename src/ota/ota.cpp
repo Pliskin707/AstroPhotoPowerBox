@@ -35,7 +35,7 @@ void ota::begin (const char * const deviceName, statusDisplay * const pDisplay)
     {
         static unsigned int callCount = 0;
 
-        if (_pDisplay != nullptr)
+        if (_pDisplay)
         {
             
             if (((callCount % 10) == 0) || (progress == total))
@@ -53,10 +53,14 @@ void ota::begin (const char * const deviceName, statusDisplay * const pDisplay)
 
     ArduinoOTA.onError([](ota_error_t error) 
     {
-        _pDisplay->clearDisplay();
-        _pDisplay->setCursor(0, 16);
-        _pDisplay->printf_P(PSTR("Update failed (%d)"), error);
-        _pDisplay->suppressContentTemporary(3000);
+        _sigUpdateStarted = false;
+        if (_pDisplay)
+        {
+            _pDisplay->clearDisplay();
+            _pDisplay->setCursor(0, 16);
+            _pDisplay->printf_P(PSTR("Update failed (%d)"), error);
+            _pDisplay->suppressContentTemporary(3000);
+        }
     });
 
     ArduinoOTA.onEnd([]() 
@@ -75,7 +79,7 @@ void ota::begin (const char * const deviceName, statusDisplay * const pDisplay)
         ESP.reset();
     });
 
-    ArduinoOTA.begin();
+    ArduinoOTA.begin(false);
 }
 
 void ota::handle(void)

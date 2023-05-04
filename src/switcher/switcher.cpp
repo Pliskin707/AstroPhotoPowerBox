@@ -188,7 +188,7 @@ static void _consumerPowerLoop (const bool requestedState)
                 // set all relays and components to their least power consuming state
                 setConsumers(false);
                 setMount(true);
-                setCamera(true);
+                setCamera(false);
                 setHeater(0, 0.0f);
                 setHeater(1, 0.0f);
             }
@@ -233,11 +233,11 @@ static void _consumerPowerLoop (const bool requestedState)
 
         case e_consumers_on_idle:
         {
-            //! debug
-            if (timeSinceStateChange > 60000)
-                setHeater(1, 0);
-            else
-                setHeater(1, 3);
+            //! warning this is not working correctly! Mosfet gets too hot!
+            // if (powersensors.getVoltage(e_psens_ch1_battery) < 11)
+            //     setHeater(1, 0);
+            // else
+            //     setHeater(1, 3);
 
             if (!requestedState)
                 _consumersState = e_consumers_on_prepare_power_down;
@@ -328,6 +328,11 @@ void loop (void)
         case e_noCommand: break;
         case e_powerConsumers_off:  _consumerPowerRequest = false;  break;
         case e_powerConsumers_on:   _consumerPowerRequest = true;   break;
+        case e_htr1_off:            setHeater(0, 0);    break;
+        case e_htr1_5W:             setHeater(0, 5);    break;
+        case e_htr1_10W:            setHeater(0, 10);   break;
+        case e_htr1_15W:            setHeater(0, 15);   break;
+        // TODO handle other commands
     }
 
     _consumerPowerLoop(_consumerPowerRequest);
@@ -346,7 +351,7 @@ void setMount (const bool on)
 
 void setCamera (const bool on)
 {
-    digitalWrite(SWITCHER_PIN_CAMERA, !on); // NC
+    digitalWrite(SWITCHER_PIN_CAMERA, on);
 }
 
 void setCharger (const bool on)
@@ -356,7 +361,7 @@ void setCharger (const bool on)
 
 bool getCharger (void)
 {
-    return digitalRead(SWITCHER_PIN_CHARGER);
+    return !digitalRead(SWITCHER_PIN_CHARGER);
 }
 
 void setHeater (const uint_fast8_t heaterNr, const float powerLimit)
@@ -391,7 +396,7 @@ bool getMount (void)
 
 bool getCamera (void)
 {
-    return !digitalRead(SWITCHER_PIN_CAMERA);   // NC
+    return digitalRead(SWITCHER_PIN_CAMERA);
 }
 
 float getHeater (const uint_fast8_t heaterNr)

@@ -66,6 +66,8 @@ void lifepo4_battery::loop (void)
         const float voltage = powersensors.getVoltage(e_psens_ch1_battery);
         const float current = powersensors.getCurrent(e_psens_ch1_battery);
         const uint32_t sysTime = millis();
+        _idleCurrentSince = (fabsf(current) < 0.05) ? (_idleCurrentSince ? _idleCurrentSince : sysTime) : 0;
+        const bool getSoCFromVoltage = ((voltage <= 12.8) || (voltage >= 13.3)) && ((sysTime - _idleCurrentSince) > 60000);
 
         if (_lastUpdate)   // already initialized?
         {
@@ -79,9 +81,13 @@ void lifepo4_battery::loop (void)
             nvmem.setRemainingCharge(fmaxf(_chargeRemaining, 0.0f));    // don't store negative charge values
 
             // update the state of charge
-            float actSoC = _chargeRemaining / _chargeTotal;
-            actSoC = fminf(100.0f, fmaxf(0.0f, actSoC));
-            // TODO plausibility with measured battery voltage
+            if (!getSoCFromVoltage)
+            {
+                float actSoC = _chargeRemaining / _chargeTotal;
+                actSoC = fminf(100.0f, fmaxf(0.0f, actSoC));
+                // TODO plausibility with measured battery voltage
+                _SoC = actSoC;
+            }
 
 
             // "brown out" detection
@@ -90,8 +96,7 @@ void lifepo4_battery::loop (void)
         }
 
         // calculate SoC
-        _idleCurrentSince = (fabsf(current) < 0.05) ? (_idleCurrentSince ? _idleCurrentSince : millis()) : 0;
-        if (((millis() - _idleCurrentSince) > 60000) && (voltage >= 13.3f))
+        if (getSoCFromVoltage)
         {
             _SoC = _getSoCFromRestingVoltage(voltage);
             _SoCgood = true;
@@ -105,7 +110,7 @@ void lifepo4_battery::loop (void)
 
 float lifepo4_battery::getEnergyRemainingWh(void) const
 {
-    return _chargeRemaining * (1.0f/3600.0f) * _prevVoltage;    // ([As] -> [Ah]) * batVoltage
+    return _chargeRemaining * (1.0f/3600.0f) * restingVoltageCurve[2].totalVoltage;    // ([As] -> [Ah]) * nominal batVoltage
 }
 void lifepo4_battery::_initFromMemory(void)
 {

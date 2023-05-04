@@ -30,13 +30,16 @@ namespace pliskin {
         pOled->fillRect(rectWidth, 8, 3, (pOled->height() - 2 * 8), SSD1306_WHITE);
         pOled->drawRect(1, 1, rectWidth - 2, pOled->height() - 2, SSD1306_BLACK);
 
-        // invert the content of the empty part
-        for (int fillLine = 0; fillLine < fillHeight; fillLine++)
+        if ((powersensors.getVoltage(e_psens_ch1_battery) > 11) || (millis() & (1 << 10)))
         {
-            for (int vPos = iSoC + (fillLine / 3); vPos < fillWidth; vPos++)  // slightly angeled
+            // invert the content of the empty part
+            for (int fillLine = 0; fillLine < fillHeight; fillLine++)
             {
-                const int16_t x = vPos + 2, y = fillLine + 2;
-                pOled->drawPixel(x, y, !pOled->getPixel(x, y));
+                for (int vPos = iSoC + (fillLine / 3); vPos < fillWidth; vPos++)  // slightly angeled
+                {
+                    const int16_t x = vPos + 2, y = fillLine + 2;
+                    pOled->drawPixel(x, y, !pOled->getPixel(x, y));
+                }
             }
         }
 

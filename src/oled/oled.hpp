@@ -25,6 +25,7 @@ class statusDisplay: public Adafruit_SSD1306
         uint32_t _nextBarUpdate = 0;
         uint32_t _nextContentUpdate = 0;
         uint32_t _noContentUntil = 0;
+        bool _wasSuppressed = false;
         const uint32_t _barUpdateDelay = 50;
         screenBaseClass * _screen = nullptr;
 
@@ -38,7 +39,7 @@ class statusDisplay: public Adafruit_SSD1306
         void setStatusBarVisible (const bool visible) {_nextBarUpdate = (visible ? 0 : UINT32_MAX);};
         e_screen getScreen (void) const {return _screen ? _screen->getType() : e_screen::off;};
         void setScreen (const e_screen screen);
-        void suppressContentTemporary (const uint32_t durationMs) {_nextBarUpdate = 0; _noContentUntil = millis() + durationMs;};
+        void suppressContentTemporary (const uint32_t durationMs) {_nextBarUpdate = 0; _wasSuppressed = true; _noContentUntil = millis() + durationMs;};
 };
 
 };

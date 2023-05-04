@@ -6,7 +6,7 @@
 #include <memory>
 
 #include "config.hpp"
-
+#include "connection/connection.hpp"
 
 #define STATUS_SYM_BAT_ICON     (1 << 0)
 #define STATUS_SYM_BAT_PERCENT  (1 << 1)
@@ -59,7 +59,7 @@ class stateOfChargeValue : public barSymbol
 class wifiStrengthIcon : public barSymbol
 {
     public:
-        wifiStrengthIcon() {_width = 8; _height = 8;};
+        wifiStrengthIcon() {_width = 8; _height = 16;};
         void printSym (STATUS_CALL_PARAMS) override;
         uint32_t getType (void) const override {return STATUS_SYM_WIFI_ICON;};
 };
@@ -96,7 +96,7 @@ class statusBar
     public:
         std::shared_ptr<barSymbol> addSymbol (const uint32_t symbolFlag);
         void printStatus (Adafruit_SSD1306 * const pOled);
-        void setup (const uint32_t symbolFlags = STATUS_SYM_BAT_ICON | STATUS_SYM_WIFI_ICON, const uint16_t posY = 0);
+        void setup (const uint16_t width, const uint16_t height, const uint32_t symbolFlags = STATUS_SYM_BAT_ICON | STATUS_SYM_WIFI_ICON, const uint16_t posY = 0);
 };
 
 #endif // __STATUS_BAR_H__

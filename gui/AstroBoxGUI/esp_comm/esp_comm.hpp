@@ -9,10 +9,12 @@
 #include <QJsonObject>
 #include <QJsonArray>
 #include <QJsonValue>
+#include <QProcess>
 
 #include "qtzeroconf/qzeroconf.h"
 #include "logger/logger.h"
 #include "backend.hpp"
+#include "settings.hpp"
 
 #define UDP_PORT                (5051)
 #define SERVICE_NAME            "AstroPowerBox"
@@ -22,7 +24,7 @@ class ESP_comm : public QObject
     Q_OBJECT
 
 private:
-    backend &_backend;
+    Backend &_backend;
     QHostAddress _espIp = QHostAddress("AstroNode_FCCB1C.local");
     QZeroConf _zeroconf;
     QUdpSocket * _socket = nullptr;
@@ -37,7 +39,7 @@ private slots:
 
 
 public:
-    explicit ESP_comm(backend &backend, QObject *parent = nullptr);
+    explicit ESP_comm(Backend &backend, QObject *parent = nullptr);
     ~ESP_comm() {qDebug() << "ESP communication destroyed" << Qt::endl;}
 
 signals:

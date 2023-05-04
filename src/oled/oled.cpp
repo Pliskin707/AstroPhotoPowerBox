@@ -17,7 +17,8 @@ void statusDisplay::setup (void)
     setTextWrap(false);
     setScreen(e_screen::startup);
     dim(true);
-    _statusBar.setup(STATUS_SYM_WIFI_ICON | STATUS_SYM_LOCK_ICON);
+    _statusBar.setup(width(), height(), STATUS_SYM_WIFI_ICON | STATUS_SYM_LOCK_ICON);
+    suppressContentTemporary(5000);
     loop();
 }
 
@@ -25,9 +26,17 @@ void statusDisplay::loop(void)
 {
     const uint32_t sysTime = millis();
     bool show = false;
+    bool allowContent = (sysTime > _noContentUntil);
 
-    if ((sysTime >= _nextContentUpdate) && (sysTime > _noContentUntil) && _screen)
+    if ((sysTime >= _nextContentUpdate) && allowContent && _screen)
     {
+        if (_wasSuppressed)
+        {
+            _wasSuppressed = false;
+            clearDisplay();
+            _nextBarUpdate = 0;
+        }
+
         _nextContentUpdate = _screen->show(this);
         show = true;
     }

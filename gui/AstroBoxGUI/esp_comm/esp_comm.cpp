@@ -1,6 +1,6 @@
 #include "esp_comm.hpp"
 
-ESP_comm::ESP_comm(backend &backend, QObject *parent) : QObject(parent), _backend(backend)
+ESP_comm::ESP_comm(Backend &backend, QObject *parent) : QObject(parent), _backend(backend)
 {
     qDebug() << "ESP communication created" << Qt::endl;
 
@@ -65,6 +65,14 @@ void ESP_comm::_parseRxData()
 
             if (logBat)
                 _log.append(controllerTime, batVoltage, batCurrent);
+
+            // auto suspend PC
+            if (jObj["shutdown PC"].toBool() && isAstroMiniPc())
+            {
+                //qDebug() << "Test Shutdown <<<<<<<<" << Qt::endl;
+                QProcess::startDetached("shutdown /h /t 10");
+            }
+
         }
     }
 }

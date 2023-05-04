@@ -44,10 +44,10 @@ void statusBar::printStatus(Adafruit_SSD1306 * const pOled)
         sym->printSym(pOled, SoC, wifidbm, user, keepAwake, charging);
 }
 
-void statusBar::setup(const uint32_t symbolFlags, const uint16_t posY)
+void statusBar::setup(const uint16_t width, const uint16_t height, const uint32_t symbolFlags, const uint16_t posY)
 {
     _symbols.clear();
-    uint16_t posX = 127;    // right most pixel
+    uint16_t posX = width - 1;    
 
     for (uint32_t flag = 1; flag; flag <<= 1)
         if (flag & symbolFlags)
@@ -59,6 +59,10 @@ void statusBar::setup(const uint32_t symbolFlags, const uint16_t posY)
                 {
                     case STATUS_SYM_PLAYER_NAME:
                         symbol->setPos(0, posY);
+                        break;
+
+                    case STATUS_SYM_LOCK_ICON:
+                        symbol->setPos(width - symbol->getWidth() - 1, height - symbol->getHeight() - 1);    // put this in the bottom right corner
                         break;
 
                     default:
@@ -168,20 +172,28 @@ void wifiStrengthIcon::printSym(STATUS_CALL_PARAMS)
     _clearDisplayPos(pOled);
 
     // no connection or invalid?
-    if ((wifidbm < wifiStrengthValues[0]) || !wifidbm)
+    if ((wifidbm < wifiStrengthValues[0]) || !wifidbm || !connectionHandler::isConnected())
     {
         // draw "no connection" icon
         pOled->drawBitmap(_posX, _posY, NoWifiSymbol, 8, 8, SSD1306_WHITE);
-        return;
+    }
+    else
+    {
+        // draw the bars
+        for (uint_fast16_t bar = 0, posX = 7 + _posX, posY = 6 + _posY, height = 1; (bar < 4) && (wifidbm >= wifiStrengthValues[bar]); bar++, posX -= 2, posY -=2, height += 2)
+            pOled->drawFastVLine(posX, posY, height, SSD1306_WHITE);
     }
 
-    // draw the bars
-    for (uint_fast16_t bar = 0, posX = 7 + _posX, posY = 6 + _posY, height = 2; (bar < 4) && (wifidbm >= wifiStrengthValues[bar]); bar++, posX -= 2, posY -=2, height += 2)
-        pOled->drawFastVLine(posX, posY, height, SSD1306_WHITE);
+    // print the wifi auth index
+    pOled->setCursor(_posX + 3, _posY + 8);
+    pOled->print(connectionHandler::getSSIDndx());
 }
 
 void lockIcon::printSym(STATUS_CALL_PARAMS)
 {
+    // remove the old content
+    _clearDisplayPos(pOled);
+
     const auto &symMem = (switcher::getKeyLockState() == switcher::keyLockState::e_unlocked_idle) ? UnlckdSymbol : LockedSymbol;
     pOled->drawBitmap(_posX, _posY, symMem, 5, 8, SSD1306_WHITE);
 }

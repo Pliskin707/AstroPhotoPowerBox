@@ -2,7 +2,7 @@ import QtQuick 2.12
 import QtQuick.Window 2.12
 import QtQuick.Controls 2.12
 
-import pliskin.astroboxgui.backend 1.0
+import Pliskin.Astroboxgui.Backend 1.0
 
 Window {
     width: 640

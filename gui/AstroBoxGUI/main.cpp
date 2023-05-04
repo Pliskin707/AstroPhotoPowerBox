@@ -26,7 +26,7 @@ int main(int argc, char *argv[])
         }
     }
 
-    backend backendData(&app);
+    Backend backendData(&app);
     ESP_comm comm(backendData, &app);
     QQmlApplicationEngine engine;
     const QUrl url(QStringLiteral("qrc:/main.qml"));

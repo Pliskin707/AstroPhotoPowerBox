@@ -1,11 +1,11 @@
 #include "backend.hpp"
 
-const QString &backend::debugText() const
+const QString &Backend::debugText() const
 {
     return _debugText;
 }
 
-void backend::setDebugText(const QString &newDebugText)
+void Backend::setDebugText(const QString &newDebugText)
 {
     if (_debugText == newDebugText)
         return;
@@ -13,7 +13,7 @@ void backend::setDebugText(const QString &newDebugText)
     emit debugTextChanged();
 }
 
-backend::backend(QObject *parent) : QObject(parent)
+Backend::Backend(QObject *parent) : QObject(parent)
 {
 
 }

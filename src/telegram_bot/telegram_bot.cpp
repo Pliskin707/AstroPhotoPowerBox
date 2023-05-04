@@ -4,6 +4,7 @@
 #define TBOT_COMMAND_RELAYS     "/relaycontrol"
 #define TBOT_COMMAND_GETVER     "/getboxversion"
 #define TBOT_COMMAND_HEATER     "/setheater"
+#define TBOT_COMMAND_STATUS     "/getstatus"
 #define TBOT_QUERY_RELAYS       "Relay"
 
 #define TBOT_HEATER_OFF         "\xE2\x9D\x84 Aus"
@@ -38,6 +39,7 @@ static void _pingRequested (const TBMessage &queryMsg)
     display.clearDisplay();
     display.setCursor(0, 0);
     display.printf_P(PSTR("Ping: %s"), queryMsg.text);
+    display.suppressContentTemporary(1000);
     telegramBot.endQuery(queryMsg, "Pong", false);
 }
 
@@ -75,60 +77,66 @@ static void _subrelayNotImplemented (const TBMessage &queryMsg)
 
 bool AstroTelegramBot::begin()
 {
-    botClient.setSession(&botSession);
-    botClient.setTrustAnchors(&ta);
-    botClient.setBufferSizes(1024, 1024);
+    if (!_keyboardsInitialized)
+    {
+        botClient.setSession(&botSession);
+        botClient.setTrustAnchors(&ta);
+        botClient.setBufferSizes(1024, 1024);
 
-    setUpdateTime(3000);
-    setTelegramToken(TELEGRAM_TOKEN);
-    setFormattingStyle(AsyncTelegram2::FormatStyle::MARKDOWN);
+        setUpdateTime(3000);
+        setTelegramToken(TELEGRAM_TOKEN);
+        setFormattingStyle(AsyncTelegram2::FormatStyle::MARKDOWN);
 
-    // keyboards
-    _keyboard.addButton("Ping", "PingRequest", KeyboardButtonQuery, _pingRequested);
-    addInlineKeyboard(&_keyboard);  // this is only required for keyboards with callback functions
-    // sendTo(TELEGRAM_CHAT, "This is inline keyboard 1:", _keyboard.getJSON()); 
+        // keyboards
+        _keyboard.addButton("Ping", "PingRequest", KeyboardButtonQuery, _pingRequested);
+        addInlineKeyboard(&_keyboard);  // this is only required for keyboards with callback functions
+        // sendTo(TELEGRAM_CHAT, "This is inline keyboard 1:", _keyboard.getJSON()); 
 
-    _relayKeyboard.addButton("\xE2\x9A\xA1 Verbraucher", "RelayConsumers", KeyboardButtonQuery, _subrelayConsumers);
-    _relayKeyboard.addRow();
-    _relayKeyboard.addButton("\xF0\x9F\x94\x8C Ladegerät", "RelayCharger", KeyboardButtonQuery, _subrelayNotImplemented);
-    _relayKeyboard.addRow();
-    _relayKeyboard.addButton("\xF0\x9F\x94\xAD Montierung", "RelayMount", KeyboardButtonQuery, _subrelayNotImplemented);
-    _relayKeyboard.addRow();
-    _relayKeyboard.addButton(TBOT_CANCEL, "AbortKeyboard", KeyboardButtonQuery, _abortKeyboard);
-    // 	\xF0\x9F\x92\xBB computer
-    // \xF0\x9F\x94\x8B battery
-    // \xF0\x9F\x94\xAD telescope
-    // \xF0\x9F\x93\xA6 package
-    // \xE2\x9A\xA0 warning
-    addInlineKeyboard(&_relayKeyboard);
+        _relayKeyboard.addButton("\xE2\x9A\xA1 Verbraucher", "RelayConsumers", KeyboardButtonQuery, _subrelayConsumers);
+        _relayKeyboard.addRow();
+        _relayKeyboard.addButton("\xF0\x9F\x94\x8C Ladegerät", "RelayCharger", KeyboardButtonQuery, _subrelayNotImplemented);
+        _relayKeyboard.addRow();
+        _relayKeyboard.addButton("\xF0\x9F\x94\xAD Montierung", "RelayMount", KeyboardButtonQuery, _subrelayNotImplemented);
+        _relayKeyboard.addRow();
+        _relayKeyboard.addButton(TBOT_CANCEL, "AbortKeyboard", KeyboardButtonQuery, _abortKeyboard);
+        // 	\xF0\x9F\x92\xBB computer
+        // \xF0\x9F\x94\x8B battery
+        // \xF0\x9F\x94\xAD telescope
+        // \xF0\x9F\x93\xA6 package
+        // \xE2\x9A\xA0 warning
+        addInlineKeyboard(&_relayKeyboard);
 
-    _heaterReplyKeyboard.enableOneTime();
-    _heaterReplyKeyboard.addButton(TBOT_HEATER_OFF);
-    _heaterReplyKeyboard.addButton(TBOT_HEATER_5W);
-    _heaterReplyKeyboard.addButton(TBOT_HEATER_10W);
-    _heaterReplyKeyboard.addButton(TBOT_HEATER_15W);
-    _heaterReplyKeyboard.addButton(TBOT_HEATER_AUTO);
-    _heaterReplyKeyboard.addRow();
-    _heaterReplyKeyboard.addButton(TBOT_CANCEL);
+        _heaterReplyKeyboard.enableOneTime();
+        _heaterReplyKeyboard.addButton(TBOT_HEATER_OFF);
+        _heaterReplyKeyboard.addButton(TBOT_HEATER_5W);
+        _heaterReplyKeyboard.addButton(TBOT_HEATER_10W);
+        _heaterReplyKeyboard.addButton(TBOT_HEATER_15W);
+        _heaterReplyKeyboard.addButton(TBOT_HEATER_AUTO);
+        _heaterReplyKeyboard.addRow();
+        _heaterReplyKeyboard.addButton(TBOT_CANCEL);
 
-    // commands
-    setMyCommands(TBOT_COMMAND_ECHO, "Schaltet Echo an oder aus");
-    setMyCommands(TBOT_COMMAND_RELAYS, "Geräte ein- oder ausschalten");
-    setMyCommands(TBOT_COMMAND_GETVER, "Liest die Softwareversion aus");
-    setMyCommands(TBOT_COMMAND_HEATER, "Steuert ein Heizband");
+        // commands
+        setMyCommands(TBOT_COMMAND_ECHO, "Schaltet Echo an oder aus");
+        setMyCommands(TBOT_COMMAND_RELAYS, "Geräte ein- oder ausschalten");
+        setMyCommands(TBOT_COMMAND_GETVER, "Liest die Softwareversion aus");
+        setMyCommands(TBOT_COMMAND_HEATER, "Steuert ein Heizband");
+        setMyCommands(TBOT_COMMAND_STATUS, "Gibt den aktuellen Status zurück");
+
+        _keyboardsInitialized = true;
+    }
     
     if (!AsyncTelegram2::begin())
     {
-        display.clearDisplay();
-        display.setCursor(0, 0);
-        display.centerText("Telegram failed:");
-        display.setCursor(0, 8);
-        char buf[100];
-        botClient.getLastSSLError(buf, sizeof(buf));
-        display.setTextWrap(true);
-        display.print(buf);
-        display.setTextWrap(false);
-        delay(1000);
+        // display.clearDisplay();
+        // display.setCursor(0, 0);
+        // display.centerText("Telegram failed:");
+        // display.setCursor(0, 8);
+        // char buf[100];
+        // botClient.getLastSSLError(buf, sizeof(buf));
+        // display.setTextWrap(true);
+        // display.print(buf);
+        // display.setTextWrap(false);
+        // display.suppressContentTemporary(10000);
 
         return false;
     }
@@ -149,12 +157,13 @@ void AstroTelegramBot::loop()
         display.setTextWrap(1);
         display.print(_msg.text);
         display.setTextWrap(false);
+        display.suppressContentTemporary(1000);
 
         switch (_msg.messageType)
         {
             case MessageQuery: _handleQuery(_msg); break;
-            case MessageText: _handleText(_msg); break;
-            case MessageReply: _handleReplies(_msg); break;
+            case MessageText: _handleText(_msg); break;     // messages sent to the bot (no keyboard button presses)
+            case MessageReply: _handleReplies(_msg); break; // reply keyboard replies
             default: break;
         }
 
@@ -206,19 +215,6 @@ void AstroTelegramBot::_handleText(const TBMessage &msg)
 {
     if (msg.text.startsWith(F(TBOT_COMMAND_RELAYS)))
     {
-        // InlineKeyboard kbd;
-        // bool relayStates[4] = {true, false, true, false};  // TODO fill these
-        
-        // kbd.addButton(relayStates[0] ? "Verbraucher ausschalten":"Verbraucher anschalten", relayStates[0] ? "Relay0_Off":"Relay0_On", KeyboardButtonQuery);
-        // kbd.addRow();
-        // kbd.addButton(relayStates[1] ? "Ladegerät trennen":"Ladegerät verbinden", relayStates[1] ? "Relay1_Off":"Relay1_On", KeyboardButtonQuery);
-        // kbd.addRow();
-        // kbd.addButton(relayStates[2] ? "Montierung Notaus":"Montierung einschalten", relayStates[2] ? "Relay2_Off":"Relay2_On", KeyboardButtonQuery);
-        // kbd.addRow();
-        // kbd.addButton(relayStates[3] ? "Reserve an":"Reserve aus", relayStates[3] ? "Relay3_Off":"Relay3_On", KeyboardButtonQuery);
-
-        // sendMessage(msg, "*__Relaissteuerung__*", kbd);
-
         sendMessage(msg, "*__Relaissteuerung__*", _relayKeyboard);
     }
     else if (msg.text.startsWith(F(TBOT_COMMAND_ECHO)))
@@ -241,6 +237,19 @@ void AstroTelegramBot::_handleText(const TBMessage &msg)
         buf[sizeof(buf) - 1] = 0;   // force end of string
         sendMessage(msg, buf);
     }
+    else if (msg.text.startsWith(F(TBOT_COMMAND_STATUS)))
+    {
+        char buf[150];
+        div_t volt = div(powersensors.getVoltage(e_psens_ch1_battery) * 100, 100);
+        div_t amp = div(powersensors.getCurrent(e_psens_ch1_battery) * 1000, 1000);
+
+        snprintf_P(buf, sizeof(buf), PSTR("*__Status__*\n\nState of Charge: %d %%\nVerbleibende Ladung: %d Wh\nSpannung: %s%d,%02u V\nStrom: %s%d,%03u A"), 
+            (uint16_t) battery.getSoC(), (uint16_t) battery.getEnergyRemainingWh(), 
+            volt.rem < 0 ? "\\-":"", volt.quot, abs(volt.rem), 
+            amp.rem < 0 ? "\\-":"", amp.quot, abs(amp.rem));
+        buf[sizeof(buf) - 1] = 0;
+        sendMessage(msg, buf);
+    }
     else if (msg.text.startsWith(F(TBOT_CANCEL)))
     {
         // ReplyKeyboard emptyKeyboard;
@@ -260,6 +269,17 @@ void AstroTelegramBot::_handleReplies(const TBMessage &msg)
         char buf[100];
         snprintf_P(buf, sizeof(buf), PSTR("%s gewählt von %s"), msg.text.c_str(), msg.sender.firstName.c_str());
         buf[sizeof(buf) - 1] = 0;
+
+        // TODO make this work for both heaters
+        e_telegram_command cmd = e_noCommand;
+        if (msg.text.equals(TBOT_HEATER_OFF))       cmd = e_htr1_off;
+        else if (msg.text.equals(TBOT_HEATER_5W))   cmd = e_htr1_5W;
+        else if (msg.text.equals(TBOT_HEATER_10W))  cmd = e_htr1_10W;
+        else if (msg.text.equals(TBOT_HEATER_15W))  cmd = e_htr1_15W;
+        else if (msg.text.equals(TBOT_HEATER_AUTO)) cmd = e_htr1_auto;
+
+        if (cmd != e_noCommand)
+            _pendingCommands.write(&cmd);
 
         removeReplyKeyboard(msg, buf);
     }

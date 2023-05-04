@@ -19,7 +19,17 @@ typedef enum
 {
     e_noCommand = 0,
     e_powerConsumers_on,
-    e_powerConsumers_off
+    e_powerConsumers_off,
+    e_htr1_off,
+    e_htr1_5W,
+    e_htr1_10W,
+    e_htr1_15W,
+    e_htr1_auto,
+    e_htr2_off,
+    e_htr2_5W,
+    e_htr2_10W,
+    e_htr2_15W,
+    e_htr2_auto
 } e_telegram_command;
 
 class AstroTelegramBot : public AsyncTelegram2
@@ -28,6 +38,7 @@ class AstroTelegramBot : public AsyncTelegram2
 
     private:
         bool _init_ok = false;
+        bool _keyboardsInitialized = false;
         bool _echo = false;
         bool _heaterKeyboardVisible = false;
         uint32_t _nextCheck = 0;

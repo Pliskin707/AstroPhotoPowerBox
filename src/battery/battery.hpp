@@ -4,8 +4,9 @@
 #include "sensors/power/psens.hpp"
 #include "switcher/switcher.hpp"
 #include "non volatile/non_volatile.hpp"
+#include "non_copy_class.hpp"
 
-class lifepo4_battery
+class lifepo4_battery : private nonCopyable
 {
     private:
         uint32_t _lastUpdate = 0;

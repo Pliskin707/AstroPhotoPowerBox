@@ -5,7 +5,7 @@
 #include <qqml.h>
 #include <QString>
 
-class backend : public QObject
+class Backend : public QObject
 {
     Q_OBJECT
     QML_ELEMENT
@@ -15,7 +15,7 @@ private:
     QString _debugText = "hello world";
 
 public:
-    explicit backend(QObject *parent = nullptr);
+    explicit Backend(QObject *parent = nullptr);
 
     const QString &debugText() const;
     void setDebugText(const QString &newDebugText);
