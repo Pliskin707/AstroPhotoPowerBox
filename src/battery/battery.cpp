@@ -1,5 +1,8 @@
 #include "battery.hpp"
 
+static const float _chargeTotal      = ((CAPACITY_KWH) * 3600.0f);  // [As]
+static const float _chargePerPercent = ((_chargeTotal) / 100.0f);   // [As/%]
+
 lifepo4_battery battery;    // global instance
 
 typedef struct
@@ -78,12 +81,13 @@ void lifepo4_battery::loop (void)
 
             // update the known capacity
             _chargeRemaining += deltaCharge;
+            _chargeRemaining = fminf(_chargeRemaining, _chargeTotal);
             nvmem.setRemainingCharge(fmaxf(_chargeRemaining, 0.0f));    // don't store negative charge values
 
             // update the state of charge
             if (!getSoCFromVoltage)
             {
-                float actSoC = _chargeRemaining / _chargeTotal;
+                float actSoC = _chargeRemaining / _chargePerPercent;
                 actSoC = fminf(100.0f, fmaxf(0.0f, actSoC));
                 // TODO plausibility with measured battery voltage
                 _SoC = actSoC;
@@ -112,6 +116,12 @@ float lifepo4_battery::getEnergyRemainingWh(void) const
 {
     return _chargeRemaining * (1.0f/3600.0f) * restingVoltageCurve[2].totalVoltage;    // ([As] -> [Ah]) * nominal batVoltage
 }
+
+float lifepo4_battery::getCapacityTotal(void) const 
+{
+    return _chargeTotal;
+}
+
 void lifepo4_battery::_initFromMemory(void)
 {
     _initialized = true;
