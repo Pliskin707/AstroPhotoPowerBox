@@ -69,8 +69,10 @@ void lifepo4_battery::loop (void)
         const float voltage = powersensors.getVoltage(e_psens_ch1_battery);
         const float current = powersensors.getCurrent(e_psens_ch1_battery);
         const uint32_t sysTime = millis();
-        _idleCurrentSince = (fabsf(current) < 0.05) ? (_idleCurrentSince ? _idleCurrentSince : sysTime) : 0;
-        const bool getSoCFromVoltage = ((voltage <= 12.8) || (voltage >= 13.3)) && ((sysTime - _idleCurrentSince) > 60000);
+        const bool chargerConnected = ((current > 0.0f) || (voltage > 14.2f));
+        _idleCurrentSince = (!chargerConnected && (fabsf(current) < 0.05)) ? (_idleCurrentSince ? _idleCurrentSince : sysTime) : 0;
+        // const bool getSoCFromVoltage = ((voltage <= 12.5f) || (voltage >= 13.3f)) && ((sysTime - _idleCurrentSince) > 60000);
+        const bool getSoCFromVoltage = (voltage <= 12.5f) && ((sysTime - _idleCurrentSince) > 60000);
 
         if (_lastUpdate)   // already initialized?
         {
