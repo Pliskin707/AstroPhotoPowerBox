@@ -7,6 +7,7 @@ namespace connectionHandler {
 static int_fast8_t _authNdx = -1;
 static uint32_t _disconnectedSince = 0;
 static uint32_t _connectedSince = 0;
+static uint32_t _lastReconnect = 0;
 static WiFiEventHandler _eventHandler[2];
 static bool _gotIp = false;
 static bool _telegramStarted = false;
@@ -51,15 +52,29 @@ void setup(void)
 
     _eventHandler[1] = WiFi.onStationModeDisconnected([](const WiFiEventStationModeDisconnected &info)
     {
+        const uint32_t sysTime = millis();
+
         _gotIp = false; 
         _connectedSince = 0;
         _telegramStarted = false;
-        _disconnectedSince = millis();
-        telegramBot.reset();
-        WiFi.reconnect();
-        display.clearDisplay();
-        display.showWarning("WiFi lost");
-        display.suppressContentTemporary(3000);
+        if (_disconnectedSince == 0)
+        {
+            _disconnectedSince = sysTime;
+            display.clearDisplay();
+            display.showWarning("WiFi lost");
+            display.suppressContentTemporary(3000);
+        }
+
+        if ((sysTime - _lastReconnect) > 60000)
+        {
+            _lastReconnect = sysTime;
+            telegramBot.reset();
+            WiFi.reconnect();
+
+            display.clearDisplay();
+            display.showWarning("Reconnect...");
+            display.suppressContentTemporary(1000);
+        }
         //dprintf("Disconnected (%d)\n", info.reason);
     });       
 }

@@ -17,8 +17,8 @@ class lifepo4_battery : private nonCopyable
         uint32_t _idleCurrentSince = 0;
         float _SoC = 0.0f;                  // [%]
         float _chargeRemaining = 0.0f;      // [C = As]
-        float _prevCurrent = 0.0f;
-        float _prevVoltage = 0.0f;
+        int64_t _chargeRemaining_fine = 0;  // [µAs]
+        int32_t _prevCurrentMilliAmps = 0;
         bool _initialized = false;
         bool _SoCgood = false;
 

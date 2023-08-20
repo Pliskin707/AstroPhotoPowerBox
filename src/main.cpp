@@ -50,9 +50,7 @@ void setup() {
 }
 
 void loop() {
-  static bool wasConnected = false;
-  const bool isConnected = connectionHandler::isConnected();
-  if (isConnected)
+  if (connectionHandler::isConnected())
   {
     ota::handle();
 
@@ -74,16 +72,6 @@ void loop() {
       comm.transmit();  // call this last so the status is as up-to-date as possible
     }
   }
-  else
-  {
-    if (wasConnected)
-    {
-      display.clearDisplay();
-      display.setCursor(0, 0);
-      display.showWarning("WiFi Lost");
-      display.suppressContentTemporary(3000);
-    }
-  }
 
   connectionHandler::loop();
   switcher::loop();
@@ -92,6 +80,4 @@ void loop() {
   powersensors.loop();
   battery.loop();
   display.loop();
-
-  wasConnected = isConnected;
 }

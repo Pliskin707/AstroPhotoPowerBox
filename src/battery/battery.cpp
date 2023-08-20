@@ -1,7 +1,8 @@
 #include "battery.hpp"
 
-static const float _chargeTotal      = ((CAPACITY_KWH) * 3600.0f);  // [As]
-static const float _chargePerPercent = ((_chargeTotal) / 100.0f);   // [As/%]
+static const float _chargeTotal         = ((CAPACITY_KWH) * 3600.0f);           // [As]
+static const int64_t _chargeTotal_fine  = (int64_t) (_chargeTotal * 100000.0f); // [µAs]
+static const float _chargePerPercent    = ((_chargeTotal) / 100.0f);            // [As/%]
 
 lifepo4_battery battery;    // global instance
 
@@ -67,23 +68,24 @@ void lifepo4_battery::loop (void)
     {
         // call this first so the (time consuming) TWI communication is handled before the time is calculated
         const float voltage = powersensors.getVoltage(e_psens_ch1_battery);
-        const float current = powersensors.getCurrent(e_psens_ch1_battery);
+        const int32_t currentMilliAmps = (int32_t) (powersensors.getCurrent(e_psens_ch1_battery) * 1000.0f);
         const uint32_t sysTime = millis();
-        const bool chargerConnected = ((current > 0.0f) || (voltage > 14.2f));
-        _idleCurrentSince = (!chargerConnected && (fabsf(current) < 0.05)) ? (_idleCurrentSince ? _idleCurrentSince : sysTime) : 0;
+        const bool chargerConnected = ((currentMilliAmps > 0.0f) || (voltage > 14.2f));
+        _idleCurrentSince = (!chargerConnected && (abs(currentMilliAmps) < 50)) ? (_idleCurrentSince ? _idleCurrentSince : sysTime) : 0;
         // const bool getSoCFromVoltage = ((voltage <= 12.5f) || (voltage >= 13.3f)) && ((sysTime - _idleCurrentSince) > 60000);
-        const bool getSoCFromVoltage = (voltage <= 12.5f) && ((sysTime - _idleCurrentSince) > 60000);
+        const bool getSoCFromVoltage = (voltage <= 13.0f) && ((sysTime - _idleCurrentSince) > 60000);
 
         if (_lastUpdate)   // already initialized?
         {
             // calculate the area (= capacity) between the previous and actual power reading with linear interpolation
-            const float deltaTime = ((float) (sysTime - _lastUpdate)) / 1000.0f;
-            const float currentSum = current + _prevCurrent;
-            const float deltaCharge = (currentSum * deltaTime) / 2.0f;
+            const int32_t deltaTimeMs = ((sysTime - _lastUpdate));
+            const int32_t currentSumMilliAmps = currentMilliAmps + _prevCurrentMilliAmps;
+            const int32_t deltaCharge = (currentSumMilliAmps * deltaTimeMs) / 2;    // [A * 1000] * [s * 1000] = [Aµs]
 
             // update the known capacity
-            _chargeRemaining += deltaCharge;
-            _chargeRemaining = fminf(_chargeRemaining, _chargeTotal);
+            _chargeRemaining_fine += deltaCharge;
+            _chargeRemaining_fine = min(_chargeRemaining_fine, _chargeTotal_fine);
+            _chargeRemaining = ((float) _chargeRemaining_fine) / 100000.0f;
             nvmem.setRemainingCharge(fmaxf(_chargeRemaining, 0.0f));    // don't store negative charge values
 
             // update the state of charge
@@ -108,9 +110,8 @@ void lifepo4_battery::loop (void)
             _SoCgood = true;
         }
 
-        _lastUpdate  = sysTime;
-        _prevCurrent = current;
-        _prevVoltage = voltage;
+        _lastUpdate           = sysTime;
+        _prevCurrentMilliAmps = currentMilliAmps;
     }
 }
 
@@ -130,4 +131,5 @@ void lifepo4_battery::_initFromMemory(void)
 
     const auto &prevStats = nvmem.getStats();
     _chargeRemaining = prevStats.remainingCharge;
+    _chargeRemaining_fine = ((uint64_t) _chargeRemaining) * 1000000;    // As -> Aµs
 }

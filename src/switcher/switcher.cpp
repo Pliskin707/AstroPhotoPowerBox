@@ -58,7 +58,7 @@ static bool _buttonLoop (void)
 
         case e_locked_idle:
         {
-            _setLedPwm(5);
+            _setLedPwm(1);
 
             // wait for a button press
             if (btnInfo.pressed)
@@ -89,7 +89,7 @@ static bool _buttonLoop (void)
 
         case e_unlocking_wait4release:
         {
-            _setLedPwm(5);
+            _setLedPwm(1);
 
             // wait for release. 
             // if this does not happen within one second the button might be pressed unintentionally (i.e. by some object falling or pressing against the button)

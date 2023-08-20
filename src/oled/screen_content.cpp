@@ -30,6 +30,13 @@ namespace pliskin {
         pOled->fillRect(rectWidth, 8, 3, (pOled->height() - 2 * 8), SSD1306_WHITE);
         pOled->drawRect(1, 1, rectWidth - 2, pOled->height() - 2, SSD1306_BLACK);
 
+        // voltage for debugging
+        pOled->setTextSize(1);
+        pOled->setCursor(2, fillHeight - 10);
+        pOled->setTextColor(SSD1306_BLACK);
+        const div_t qr_voltage = div((int) (powersensors.getVoltage(e_psens_ch1_battery) * 1000.0f), 1000);
+        pOled->printf_P(PSTR("%02d.%03d V"), qr_voltage.quot, qr_voltage.rem);
+
         if ((powersensors.getVoltage(e_psens_ch1_battery) > 11) || (millis() & (1 << 10)))
         {
             // invert the content of the empty part
