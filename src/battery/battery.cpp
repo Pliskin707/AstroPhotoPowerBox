@@ -1,8 +1,8 @@
 #include "battery.hpp"
 
-static const float _chargeTotal         = ((CAPACITY_KWH) * 3600.0f);           // [As]
-static const int64_t _chargeTotal_fine  = (int64_t) (_chargeTotal * 100000.0f); // [µAs]
-static const float _chargePerPercent    = ((_chargeTotal) / 100.0f);            // [As/%]
+static const float _chargeTotal         = ((CAPACITY_KWH) * 3600.0f);               // [As]
+static const int64_t _chargeTotal_fine  = (int64_t) (_chargeTotal * 1000000.0f);    // [µAs]
+static const float _chargePerPercent    = ((_chargeTotal) / 100.0f);                // [As/%]
 
 lifepo4_battery battery;    // global instance
 
@@ -71,43 +71,53 @@ void lifepo4_battery::loop (void)
         const int32_t currentMilliAmps = (int32_t) (powersensors.getCurrent(e_psens_ch1_battery) * 1000.0f);
         const uint32_t sysTime = millis();
         const bool chargerConnected = ((currentMilliAmps > 0.0f) || (voltage > 14.2f));
-        _idleCurrentSince = (!chargerConnected && (abs(currentMilliAmps) < 50)) ? (_idleCurrentSince ? _idleCurrentSince : sysTime) : 0;
-        // const bool getSoCFromVoltage = ((voltage <= 12.5f) || (voltage >= 13.3f)) && ((sysTime - _idleCurrentSince) > 60000);
-        const bool getSoCFromVoltage = (voltage <= 13.0f) && ((sysTime - _idleCurrentSince) > 60000);
+        const bool idleCurrentTimeAchieved = ((sysTime - _idleCurrentSince) > 300000);
+        const bool lowVoltage = (voltage <= 12.8f);
+        const bool getSoCFromVoltage = lowVoltage || ((voltage >= 13.1f) && idleCurrentTimeAchieved);
+
+        if (chargerConnected || (abs(currentMilliAmps) > 50))
+            _idleCurrentSince = sysTime;
 
         if (_lastUpdate)   // already initialized?
         {
             // calculate the area (= capacity) between the previous and actual power reading with linear interpolation
-            const int32_t deltaTimeMs = ((sysTime - _lastUpdate));
+            const int32_t deltaTimeMs = (sysTime - _lastUpdate);
             const int32_t currentSumMilliAmps = currentMilliAmps + _prevCurrentMilliAmps;
             const int32_t deltaCharge = (currentSumMilliAmps * deltaTimeMs) / 2;    // [A * 1000] * [s * 1000] = [Aµs]
 
             // update the known capacity
             _chargeRemaining_fine += deltaCharge;
             _chargeRemaining_fine = min(_chargeRemaining_fine, _chargeTotal_fine);
-            _chargeRemaining = ((float) _chargeRemaining_fine) / 100000.0f;
-            nvmem.setRemainingCharge(fmaxf(_chargeRemaining, 0.0f));    // don't store negative charge values
+            _chargeRemaining_fine = max(_chargeRemaining_fine, 0LL);
+            _chargeRemaining = ((float) _chargeRemaining_fine) / 1000000.0f;
+            nvmem.setRemainingCharge(_chargeRemaining);
 
             // update the state of charge
-            if (!getSoCFromVoltage)
+            float SoCfromCharge = _chargeRemaining / _chargePerPercent;
+            SoCfromCharge = fminf(100.0f, fmaxf(0.0f, SoCfromCharge));
+            float SoCfromVoltage = _getSoCFromRestingVoltage(voltage);
+            SoCfromVoltage = fminf(100.0f, fmaxf(0.0f, SoCfromVoltage));
+            float SoCdiff = fabsf(SoCfromVoltage - SoCfromCharge);
+
+            if ((SoCdiff > 90.0f) || ((SoCfromCharge < 10.0f) && !lowVoltage) ||    // desync (maybe file broken or charged when the controller was not running)
+                ((SoCdiff > 10.0f) && getSoCFromVoltage))                           // plausibility
             {
-                float actSoC = _chargeRemaining / _chargePerPercent;
-                actSoC = fminf(100.0f, fmaxf(0.0f, actSoC));
-                // TODO plausibility with measured battery voltage
-                _SoC = actSoC;
+                _SoC = SoCfromVoltage;
+                _SoCgood = false;
+
+                if (idleCurrentTimeAchieved)
+                    _chargeRemaining_fine = (int64_t) (((float) _chargeTotal_fine) * SoCfromVoltage / 100.0f);
+            }
+            else
+            {
+                _SoC = SoCfromCharge;
+                _SoCgood = true;
             }
 
 
             // "brown out" detection
             // TODO if the supply voltage drops / gets critical, store the values in EEPROM
 
-        }
-
-        // calculate SoC
-        if (getSoCFromVoltage)
-        {
-            _SoC = _getSoCFromRestingVoltage(voltage);
-            _SoCgood = true;
         }
 
         _lastUpdate           = sysTime;

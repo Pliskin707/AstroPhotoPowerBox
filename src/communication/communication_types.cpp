@@ -33,6 +33,7 @@ void convertToJson(const consumerInfo &src, JsonVariant dst)
     dst["current"]       = src.current;
     dst["power"]         = src.power;
     dst["average power"] = src.avgPower;
+    dst["shunt ADC"]     = src.shuntAdc;
 }
 
 void convertToJson(const batInfo &src, JsonVariant dst)
@@ -42,6 +43,7 @@ void convertToJson(const batInfo &src, JsonVariant dst)
     dst["energy"]               = src.energy;
     dst["voltage"]              = src.voltage;
     dst["current"]              = src.current;
+    dst["shunt ADC"]            = src.shuntAdc;
     dst["seconds to full"]      = src.chargeSecondsRemainingToFullSoC;
     dst["seconds to bulk"]      = src.chargeSecondsRemainingToBulkSoC;
     dst["seconds to empty"]     = src.dischargeSecondsRemainingToEmpty;

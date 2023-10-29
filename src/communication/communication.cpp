@@ -56,6 +56,7 @@ void communication::_send (void)
     tx.batteryInfo.energy = battery.getChargeRemaining();
     tx.batteryInfo.voltage = voltage;
     tx.batteryInfo.current = current;
+    tx.batteryInfo.shuntAdc = powersensors.getAdcShunt(e_psens_ch1_battery);
     tx.batteryInfo.chargeSecondsRemainingToFullSoC = 0;
     tx.batteryInfo.chargeSecondsRemainingToBulkSoC = 0;
     tx.batteryInfo.dischargeSecondsRemainingToEmpty = 0;
@@ -72,6 +73,7 @@ void communication::_send (void)
     conInfo->current    = fmaxf(current, 0.0f);
     conInfo->power      = conInfo->voltage * conInfo->current;
     conInfo->avgPower   = conInfo->power;
+    conInfo->shuntAdc   = powersensors.getAdcShunt(e_psens_ch1_battery);
 
     conInfo = &tx.pcInfo;
     e_channel = e_psens_ch4_pc;
@@ -83,6 +85,7 @@ void communication::_send (void)
     conInfo->current    = current;
     conInfo->power      = powersensors.getPower(e_channel);
     conInfo->avgPower   = powersensors.getAvgPower(e_channel);
+    conInfo->shuntAdc   = powersensors.getAdcShunt(e_channel);
 
     conInfo = &tx.mountInfo;
     e_channel = e_psens_ch5_mount;
@@ -94,6 +97,7 @@ void communication::_send (void)
     conInfo->current    = current;
     conInfo->power      = powersensors.getPower(e_channel);
     conInfo->avgPower   = powersensors.getAvgPower(e_channel);
+    conInfo->shuntAdc   = powersensors.getAdcShunt(e_channel);
 
     conInfo = &tx.cameraInfo;
     e_channel = e_psens_ch6_imaging_cam;
@@ -105,6 +109,7 @@ void communication::_send (void)
     conInfo->current    = current;
     conInfo->power      = powersensors.getPower(e_channel);
     conInfo->avgPower   = powersensors.getAvgPower(e_channel);
+    conInfo->shuntAdc   = powersensors.getAdcShunt(e_channel);
 
     conInfo = &tx.heater1Info;
     e_channel = e_psens_ch2_dew_heater_1;
@@ -116,6 +121,7 @@ void communication::_send (void)
     conInfo->current    = current;
     conInfo->power      = powersensors.getPower(e_channel);
     conInfo->avgPower   = powersensors.getAvgPower(e_channel);
+    conInfo->shuntAdc   = powersensors.getAdcShunt(e_channel);
 
     conInfo = &tx.heater1Info;
     e_channel = e_psens_ch3_dew_heater_2;
@@ -127,6 +133,7 @@ void communication::_send (void)
     conInfo->current    = current;
     conInfo->power      = powersensors.getPower(e_channel);
     conInfo->avgPower   = powersensors.getAvgPower(e_channel);
+    conInfo->shuntAdc   = powersensors.getAdcShunt(e_channel);
 
     _doc.set(tx);
 

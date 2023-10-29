@@ -18,6 +18,7 @@ typedef struct
     float energy        = 0.0f;
     float voltage       = 0.0f;
     float current       = 0.0f;
+    int16_t shuntAdc    = 0;
     uint32_t chargeSecondsRemainingToFullSoC        = 0;
     uint32_t chargeSecondsRemainingToBulkSoC        = 0;
     uint32_t dischargeSecondsRemainingToEmpty       = 0;
@@ -32,6 +33,7 @@ typedef struct
     float current       = 0.0f;
     float power         = 0.0f;
     float avgPower      = 0.0f;
+    int16_t shuntAdc    = 0;
 } consumerInfo;
 
 typedef struct

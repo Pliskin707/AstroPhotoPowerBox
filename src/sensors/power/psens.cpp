@@ -6,13 +6,23 @@ void psens::setup (TwoWire * wire, const uint8_t addr1, const uint8_t addr2)
 {
     const uint8_t addresses[] = {addr1, addr2};
     const float correctionFactor12mOhm = ina3221::sensor::calcCurrentFactorFromShunt(0.012f);
-    uint_fast8_t ii = 0;
 
-    for (auto &sensor : _sensors)
+    for (uint_fast8_t ii = 0; ii < (sizeof(addresses) / sizeof(addresses[0])); ii++)
     {
+        auto &sensor = _sensors[ii];
         sensor = std::shared_ptr<ina3221::sensor>(new ina3221::sensor(wire));
-        sensor->setup(addresses[ii++]);
+        sensor->setup(addresses[ii]);
         sensor->setCurrentCorrection(0, correctionFactor12mOhm, 0.0f);
+
+        if (ii == 1)
+        {
+            /* channel 1 is e_psens_ch5_mount and has now an additional 0.1 Ohm resistor in parallel
+            so the current maximum is doubled to ~6A since the EQ6-R will draw up to 4A
+
+            -> 2 * 0.1 Ohm parallel = 0.05 Ohm
+            */
+            sensor->setCurrentCorrection(1, ina3221::sensor::calcCurrentFactorFromShunt(0.05f), 0.0f);  
+        }
     }
 }
 
