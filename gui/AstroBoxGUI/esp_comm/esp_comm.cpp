@@ -10,6 +10,21 @@ ESP_comm::ESP_comm(Backend &backend, QObject *parent) : QObject(parent), _backen
     // request the IP of the ESP
     QString service = QString("_%1._udp").arg(SERVICE_NAME);
     _zeroconf.startBrowser(service);
+
+    // try connecting to static address
+    if (!_socket)
+    {
+        _socket = new QUdpSocket(this);
+        if (!_socket)
+            qCritical() << "Socket creation failed!" << Qt::endl;
+        else
+        {
+            connect(_socket, &QUdpSocket::readyRead, this, &ESP_comm::_parseRxData);
+            connect(_socket, &QUdpSocket::errorOccurred, this, &ESP_comm::_sockErr);
+            _socket->bind(5051);
+            _espAddr = QHostAddress(QStringLiteral("192.168.1.2"));
+        }
+    }
 }
 
 void ESP_comm::_ReportZCErr(QZeroConf::error_t err)
