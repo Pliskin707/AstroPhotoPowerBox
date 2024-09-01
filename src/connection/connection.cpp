@@ -15,10 +15,17 @@ static bool _mdnsStarted = false;
 
 static void _tryNextSSID (void)
 {
-
+    #ifndef MULTI_AP_LIST
+    const struct 
+    {
+        const char ssid[20];
+        const char password[30];
+    } network = {SSID, PASSWORD};
+    #else
     _authNdx++;
     _authNdx %= ssid_list_len;
     const auto& network = ssid_list[_authNdx];
+    #endif
 
     _disconnectedSince  = millis();
     _connectedSince     = 0;

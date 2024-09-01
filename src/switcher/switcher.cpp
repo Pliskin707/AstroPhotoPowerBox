@@ -328,10 +328,10 @@ void loop (void)
         case e_noCommand: break;
         case e_powerConsumers_off:  _consumerPowerRequest = false;  break;
         case e_powerConsumers_on:   _consumerPowerRequest = true;   break;
-        case e_htr1_off:            setHeater(0, 0);    break;
-        case e_htr1_5W:             setHeater(0, 5);    break;
-        case e_htr1_10W:            setHeater(0, 10);   break;
-        case e_htr1_15W:            setHeater(0, 15);   break;
+        // case e_htr1_off:            setHeater(0, 0);    break;
+        // case e_htr1_5W:             setHeater(0, 5);    break;
+        // case e_htr1_10W:            setHeater(0, 10);   break;
+        // case e_htr1_15W:            setHeater(0, 15);   break;
         // TODO handle other commands
     }
 
