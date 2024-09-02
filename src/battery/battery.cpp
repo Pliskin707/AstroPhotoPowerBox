@@ -72,10 +72,10 @@ void lifepo4_battery::loop (void)
         const uint32_t sysTime = millis();
         const bool chargerConnected = ((currentMilliAmps > 0.0f) || (voltage > 14.2f));
         const bool idleCurrentTimeAchieved = ((sysTime - _idleCurrentSince) > 300000);
-        const bool lowVoltage = (voltage <= 12.8f);
-        const bool getSoCFromVoltage = lowVoltage || ((voltage >= 13.1f) && idleCurrentTimeAchieved);
+        const bool lowVoltage = (voltage <= 12.5f);
+        const bool getSoCFromVoltage = lowVoltage || ((voltage >= 13.4f) && idleCurrentTimeAchieved);
 
-        if (chargerConnected || (abs(currentMilliAmps) > 50))
+        if (chargerConnected || (abs(currentMilliAmps) > 100))
             _idleCurrentSince = sysTime;
 
         if (_lastUpdate)   // already initialized?
